@@ -34,9 +34,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Collision)
 	FCollisionProfileName HitboxCollisionProfile;
 
-	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = Collision)
+	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = Collision, Transient)
 	TArray<FHitResult> QueuedHits;
 
-	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = Collision)
+	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = Collision, Transient)
 	TArray<AActor*> QueuedHitTargets;
 };

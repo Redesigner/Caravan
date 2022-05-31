@@ -70,6 +70,10 @@ void UHitboxController::AccumulateOverlaps(UPrimitiveComponent* OverlappedCompon
 		// Disable this check for multi-hit attacks
 		if (OtherActor == Target)
 		{
+			if (GetOwnerRole() == ENetRole::ROLE_Authority)
+			{
+				// UE_LOG(LogTemp, Display, TEXT("%s hit again, ignoring extra hit."), *Target->GetName());
+			}
 			return;
 		}
 	}
@@ -83,6 +87,9 @@ void UHitboxController::AccumulateOverlaps(UPrimitiveComponent* OverlappedCompon
 
 void UHitboxController::ClearOverlaps()
 {
+	// UE_LOG(LogTemp, Display, TEXT("[%s] Clearing Hitbox Controller of %s... %i hits removed, %i hit targets removed"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"),
+	// 	*GetOwner()->GetName(), QueuedHits.Num(), QueuedHitTargets.Num() );
+
 	HitDetectedDelegate.Unbind();
 	
 	QueuedHits.Empty();

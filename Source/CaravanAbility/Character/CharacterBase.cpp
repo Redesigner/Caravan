@@ -5,8 +5,8 @@
 
 #include "CharacterBaseMovementComponent.h"
 #include "Camera/CameraComponent.h"
-#include "CaravanAbility/GameplayAbilities/CharacterAbilitySystemComponent.h"
-#include "CaravanAbility/GameplayAbilities/TestMelee_GA.h"
+#include "CaravanAbility/GameplayAbilities/Components/CharacterAbilitySystemComponent.h"
+#include "CaravanAbility/GameplayAbilities/MeleeAbility.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -114,6 +114,16 @@ void ACharacterBase::GrantAbilities()
 	}
 
 	AbilitySystem->bAbilitiesInitialized = true;
+}
+
+void ACharacterBase::SetComboState(FName NewComboState)
+{
+	ComboState = NewComboState;
+}
+
+FName ACharacterBase::GetComboState() const
+{
+	return ComboState;
 }
 
 

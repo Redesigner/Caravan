@@ -16,6 +16,8 @@ class CARAVANABILITY_API UCharacterAbilitySystemComponent : public UAbilitySyste
 	
 public:
 	UCharacterAbilitySystemComponent();
+
+	virtual bool RemoveActiveGameplayEffect(FActiveGameplayEffectHandle Handle, int32 StacksToRemove) override;
 	
 	bool bAbilitiesInitialized = false;
 };

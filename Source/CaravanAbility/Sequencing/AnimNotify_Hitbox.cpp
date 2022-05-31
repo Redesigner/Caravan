@@ -9,7 +9,11 @@ void UAnimNotify_Hitbox::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequ
                                      float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
-
+	
+	if (!MeshComp->GetOwner())
+	{
+		return;
+	}
 	UActorComponent* HitboxControllerComponent = MeshComp->GetOwner()->GetComponentByClass(UHitboxController::StaticClass());
 	if (UHitboxController* HitboxController = Cast<UHitboxController>(HitboxControllerComponent))
 	{
@@ -21,7 +25,11 @@ void UAnimNotify_Hitbox::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequ
 void UAnimNotify_Hitbox::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	
+
+	if (!MeshComp->GetOwner())
+	{
+		return;
+	}
 	UActorComponent* HitboxControllerComponent = MeshComp->GetOwner()->GetComponentByClass(UHitboxController::StaticClass());
 	if (UHitboxController* HitboxController = Cast<UHitboxController>(HitboxControllerComponent))
 	{

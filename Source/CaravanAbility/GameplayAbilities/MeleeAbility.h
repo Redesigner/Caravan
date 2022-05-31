@@ -7,31 +7,36 @@
 #include "Abilities/GameplayAbility.h"
 
 #include "UObject/Object.h"
-#include "TestMelee_GA.generated.h"
+#include "MeleeAbility.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class CARAVANABILITY_API UTestMelee_GA : public UCaravanGameplayAbility
+class CARAVANABILITY_API UMeleeAbility : public UCaravanGameplayAbility
 {
 	GENERATED_BODY()
 
-	UTestMelee_GA();
+	UMeleeAbility();
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 	virtual void CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
+	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+	void ExecuteAttack( const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+		bool InitialAttack = true);
+
 	UFUNCTION()
 	void HandleMontageEnd();
 
 	UFUNCTION()
-	void HitTarget(const FHitResult& HitResult);
+	void EndAbilityManual();
 
-	void ApplyCancelEffect(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo);
-	
+	UFUNCTION()
+	void HitTarget(const FHitResult& HitResult);
 	
 public:
 
@@ -51,4 +56,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Animation)
 	UAnimMontage* MeleeAnimation;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Animation)
+	FName InitialComboState;
 };

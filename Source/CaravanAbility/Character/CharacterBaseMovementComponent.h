@@ -16,12 +16,30 @@ class CARAVANABILITY_API UCharacterBaseMovementComponent : public UCharacterMove
 {
 	GENERATED_BODY()
 
+	UCharacterBaseMovementComponent();
+
+
+	virtual void ReplicateMoveToServer(float DeltaTime, const FVector& NewAcceleration) override;
+
+
+public:
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* TickFunction) override;
+
 	virtual float GetMaxSpeed() const override;
 
 	virtual FRotator GetDeltaRotation(float DeltaTime) const override;
 
-public:
+
+	void DisableMovementWithStun(float Time);
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Attributes")
 	FGameplayAttribute MovementSpeed;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Transient)
+	bool bIsStunned;
+
+private:
+	
+	UPROPERTY()
+	FTimerHandle StunTimer;
 };

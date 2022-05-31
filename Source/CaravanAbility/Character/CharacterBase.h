@@ -9,7 +9,7 @@
 #include "AbilitySystemInterface.h" 
 #include "CharacterBaseAttributeSet.h"
 #include "GameplayCueInterface.h"
-#include "CaravanAbility/HitboxController.h"
+#include "CaravanAbility/GameplayAbilities/Components/HitboxController.h"
 #include "CharacterBase.generated.h"
 
 class USphereComponent;
@@ -59,6 +59,9 @@ public:
 	
 	void GrantAbilities();
 
+	void SetComboState(FName NewComboState);
+	FName GetComboState() const;
+
 	UFUNCTION()
 	void MoveForward(float Scale);
 	UFUNCTION()
@@ -73,6 +76,9 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Abilities, meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<UCaravanGameplayAbility>> DefaultAbilities;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Abilities, meta = (AllowPrivateAccess = "true"))
+	FName ComboState;
 };
 
 
