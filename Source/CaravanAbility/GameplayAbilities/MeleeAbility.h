@@ -29,14 +29,15 @@ class CARAVANABILITY_API UMeleeAbility : public UCaravanGameplayAbility
 	void ExecuteAttack( const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 		bool InitialAttack = true);
 
-	UFUNCTION()
-	void HandleMontageEnd();
 
 	UFUNCTION()
 	void EndAbilityManual();
 
 	UFUNCTION()
 	void HitTarget(const FHitResult& HitResult);
+
+	UFUNCTION()
+	void HitTargetLocal(const FHitResult& HitResult);
 	
 public:
 
@@ -52,11 +53,14 @@ public:
 	TSubclassOf<UGameplayEffect> DurationCancelEffect;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Melee)
-	TSubclassOf<UGameplayEffect> HitEffect;
+	TArray<TSubclassOf<UGameplayEffect>> HitEffects;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Animation)
 	UAnimMontage* MeleeAnimation;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Animation)
 	FName InitialComboState;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Animation)
+	FName CurrentComboState;
 };

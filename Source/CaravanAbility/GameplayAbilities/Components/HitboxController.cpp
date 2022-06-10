@@ -9,11 +9,11 @@ void UHitboxController::BeginPlay()
 }
 
 // Add default functionality here for any IHitboxController functions that are not pure virtual.
-TWeakObjectPtr<USphereComponent> UHitboxController::GetHitboxByName(FName Name)
+TWeakObjectPtr<UHitboxComponent> UHitboxController::GetHitboxByName(FName Name)
 {
 	for (USceneComponent* SceneComponent : GetAttachChildren())
 	{
-		if (USphereComponent* SphereComponent = Cast<USphereComponent>(SceneComponent))
+		if (UHitboxComponent* SphereComponent = Cast<UHitboxComponent>(SceneComponent))
 		{
 			if (SphereComponent->GetFName() == Name)
 			{
@@ -24,13 +24,15 @@ TWeakObjectPtr<USphereComponent> UHitboxController::GetHitboxByName(FName Name)
 	return nullptr;
 }
 
-TWeakObjectPtr<USphereComponent> UHitboxController::SpawnHitbox(FName Name, FVector HitboxRelativeLocation, float Radius)
+TWeakObjectPtr<UHitboxComponent> UHitboxController::SpawnHitbox(FName Name, FVector HitboxRelativeLocation, FVector Direction, float Radius)
 {
-	USphereComponent* Hitbox = NewObject<USphereComponent>(this, Name);
+	UHitboxComponent* Hitbox = NewObject<UHitboxComponent>(this, Name);
 	Hitbox->SetSphereRadius(Radius, false);
 	Hitbox->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
 	Hitbox->SetRelativeLocation(HitboxRelativeLocation, false, nullptr, ETeleportType::ResetPhysics);
-	Hitbox->SetVisibility(true);
+	Hitbox->Direction = Direction;
+
+	Hitbox->SetVisibility(IsVisible());
 	Hitbox->SetHiddenInGame(false);
 
 	Hitbox->SetCollisionProfileName(HitboxCollisionProfile.Name);
@@ -47,7 +49,7 @@ TWeakObjectPtr<USphereComponent> UHitboxController::SpawnHitbox(FName Name, FVec
 
 void UHitboxController::RemoveHitboxByName(FName Name)
 {
-	TWeakObjectPtr<USphereComponent> Hitbox = GetHitboxByName(Name);
+	TWeakObjectPtr<UHitboxComponent> Hitbox = GetHitboxByName(Name);
 	if (Hitbox.IsValid())
 	{
 		Hitbox->DestroyComponent();
@@ -60,38 +62,27 @@ void UHitboxController::AccumulateOverlaps(UPrimitiveComponent* OverlappedCompon
 	{
 		return;
 	}
-	if (UShapeComponent* ShapeComponent = Cast<UShapeComponent>(OverlappedComponent))
-	{
-		// ShapeComponent->SetVisibility(false);
-	}
-	for (AActor* Target : QueuedHitTargets)
+	for (FHitResult HitResult : QueuedHits)
 	{
 		// Only accumulate the hit if the target actor has not already been hit in this ability.
 		// Disable this check for multi-hit attacks
-		if (OtherActor == Target)
+		if (OtherActor == HitResult.GetActor())
 		{
-			if (GetOwnerRole() == ENetRole::ROLE_Authority)
-			{
-				// UE_LOG(LogTemp, Display, TEXT("%s hit again, ignoring extra hit."), *Target->GetName());
-			}
 			return;
 		}
 	}
 	FHitResult ModifiedHit = FHitResult(SweepResult);
 	ModifiedHit.Location = OverlappedComponent->GetComponentLocation();
-	HitDetectedDelegate.ExecuteIfBound(ModifiedHit);
 	
+	if (UHitboxComponent* HitboxComponent = Cast<UHitboxComponent>(OverlappedComponent))
+	{
+		ModifiedHit.Normal =  HitboxComponent->GetComponentRotation().RotateVector(HitboxComponent->Direction);
+	}
+	HitDetectedDelegate.ExecuteIfBound(ModifiedHit);
 	QueuedHits.Emplace(ModifiedHit);
-	QueuedHitTargets.Emplace(OtherActor);
 }
 
 void UHitboxController::ClearOverlaps()
 {
-	// UE_LOG(LogTemp, Display, TEXT("[%s] Clearing Hitbox Controller of %s... %i hits removed, %i hit targets removed"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"),
-	// 	*GetOwner()->GetName(), QueuedHits.Num(), QueuedHitTargets.Num() );
-
-	HitDetectedDelegate.Unbind();
-	
 	QueuedHits.Empty();
-	QueuedHitTargets.Empty();
 }

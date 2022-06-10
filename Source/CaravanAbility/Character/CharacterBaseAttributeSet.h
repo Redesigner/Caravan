@@ -16,10 +16,16 @@ class CARAVANABILITY_API UCharacterBaseAttributeSet : public UAttributeSet
 
 	UCharacterBaseAttributeSet();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
+
+	UFUNCTION()
+	virtual void OnRep_CurrentHealth(const FGameplayAttributeData& OldCurrentHealth);
+
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = Movement)
 	FGameplayAttributeData MovementSpeed;
 
-	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = Health)
+	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = Health, ReplicatedUsing = OnRep_CurrentHealth)
 	FGameplayAttributeData CurrentHealth;
 };

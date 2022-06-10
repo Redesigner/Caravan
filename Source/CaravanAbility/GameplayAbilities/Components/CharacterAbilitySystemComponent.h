@@ -19,5 +19,15 @@ public:
 
 	virtual bool RemoveActiveGameplayEffect(FActiveGameplayEffectHandle Handle, int32 StacksToRemove) override;
 	
+	UFUNCTION(BlueprintCallable, Category = GameplayCue)
+	void ExecuteGameplayCueLocal(const FGameplayTag GameplayCueTag, const FGameplayCueParameters& GameplayCueParameters);
+
+	UFUNCTION(BlueprintCallable, Category = GameplayCue)
+	void AddGameplayCueLocal(const FGameplayTag GameplayCueTag, const FGameplayCueParameters& GameplayCueParameters);
+
+	UFUNCTION(BlueprintCallable, Category = GameplayCue)
+	void RemoveGameplayCueLocal(const FGameplayTag GameplayCueTag, const FGameplayCueParameters& GameplayCueParameters);
+
+
 	bool bAbilitiesInitialized = false;
 };

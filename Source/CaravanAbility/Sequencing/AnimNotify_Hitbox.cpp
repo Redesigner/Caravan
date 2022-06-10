@@ -17,7 +17,7 @@ void UAnimNotify_Hitbox::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequ
 	UActorComponent* HitboxControllerComponent = MeshComp->GetOwner()->GetComponentByClass(UHitboxController::StaticClass());
 	if (UHitboxController* HitboxController = Cast<UHitboxController>(HitboxControllerComponent))
 	{
-		HitboxController->SpawnHitbox(HitboxName, HitboxRelativeLocation, HitboxRadius);
+		HitboxController->SpawnHitbox(HitboxName, HitboxRelativeLocation, HitboxDirection, HitboxRadius);
 	}
 }
 
@@ -34,5 +34,15 @@ void UAnimNotify_Hitbox::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequen
 	if (UHitboxController* HitboxController = Cast<UHitboxController>(HitboxControllerComponent))
 	{
 		HitboxController->RemoveHitboxByName(HitboxName);
+	}
+}
+
+void UAnimNotify_Hitbox::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UAnimNotify_Hitbox, HitboxDirection))
+	{
+		HitboxDirection = HitboxDirection.GetSafeNormal();
 	}
 }

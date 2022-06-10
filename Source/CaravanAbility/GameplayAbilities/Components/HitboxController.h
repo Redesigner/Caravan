@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/SphereComponent.h"
+#include "HitboxComponent.h"
 #include "HitboxController.generated.h"
 
 // This class does not need to be modified.
@@ -15,9 +15,9 @@ class UHitboxController : public USceneComponent
 public:
 	virtual void BeginPlay() override;
 	
-	TWeakObjectPtr<USphereComponent> GetHitboxByName(FName Name);
+	TWeakObjectPtr<UHitboxComponent> GetHitboxByName(FName Name);
 
-	TWeakObjectPtr<USphereComponent> SpawnHitbox(FName Name, FVector HitboxRelativeLocation, float Radius);
+	TWeakObjectPtr<UHitboxComponent> SpawnHitbox(FName Name, FVector HitboxRelativeLocation, FVector Direction, float Radius);
 
 	void RemoveHitboxByName(FName Name);
 
@@ -36,7 +36,4 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = Collision, Transient)
 	TArray<FHitResult> QueuedHits;
-
-	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = Collision, Transient)
-	TArray<AActor*> QueuedHitTargets;
 };

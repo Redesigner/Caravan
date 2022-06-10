@@ -49,65 +49,54 @@ void UMeleeAbility::InputPressed(const FGameplayAbilitySpecHandle Handle, const 
 void UMeleeAbility::ExecuteAttack(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool InitialAttack)
 {
-	FName MontageSectionName = InitialComboState;
-	if (!InitialAttack)
-	{
-		HandleMontageEnd();
-		if (ACharacterBase* CharacterBase = Cast<ACharacterBase>(ActorInfo->AvatarActor))
-		{
-			MontageSectionName = CharacterBase->GetComboState();
-			// UE_LOG(LogAbilitySystem, Display, TEXT("[%s] Melee Combo Hit '%s' activated."), HasAuthority(&ActivationInfo) ? TEXT("Authority") : TEXT("Proxy"), *MontageSectionName.ToString());
-		}
-		if (HasAuthority(&ActivationInfo))
-		{
-			if (MeleeAnimation->IsValidSectionName(MontageSectionName))
-			{
-				MontageSetNextSectionName(InitialComboState, MontageSectionName);
-				if (UActorComponent* ActorComponent = ActorInfo->AvatarActor->GetComponentByClass(UHitboxController::StaticClass()))
-				{
-					UHitboxController* HitboxController = Cast<UHitboxController>(ActorComponent);
-					HitboxController->HitDetectedDelegate.BindUObject(this, &UMeleeAbility::HitTarget);
-				}
-			}
-		}
-		return;
-	}
-	// Check if the next section exists in the montage
-	if (!MeleeAnimation->IsValidSectionName(MontageSectionName))
+	// If we don't have an animation, this ability won't work...
+	if (!MeleeAnimation)
 	{
 		return;
 	}
-	UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("AnimationMontageTask"), MeleeAnimation, 1.0f, MontageSectionName, false);
+	if (InitialAttack)
+	{
+		CurrentComboState = InitialComboState;
+		UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("AnimationMontageTask"), MeleeAnimation, 1.0f, CurrentComboState, false);
+		// Make sure to call the end ability function at the end of the ability, or cooldowns etc. won't work
+		Task->OnCompleted.AddDynamic(this, &UMeleeAbility::EndAbilityManual);
+		Task->ReadyForActivation();
 
-	if (HasAuthority(&ActivationInfo))
-	{
-		Task->OnCompleted.AddDynamic(this, &UMeleeAbility::HandleMontageEnd);
+		// Bind our hit functions to the hitbox controller
 		if (UActorComponent* ActorComponent = ActorInfo->AvatarActor->GetComponentByClass(UHitboxController::StaticClass()))
 		{
 			UHitboxController* HitboxController = Cast<UHitboxController>(ActorComponent);
-			HitboxController->HitDetectedDelegate.BindUObject(this, &UMeleeAbility::HitTarget);
+			if (HasAuthority(&ActivationInfo))
+			{
+				HitboxController->HitDetectedDelegate.BindUObject(this, &UMeleeAbility::HitTarget);
+			}
+			else
+			{
+				// Even if we don't have authority, still call the blueprint hit function, so we can apply any cues we need
+				HitboxController->HitDetectedDelegate.BindUObject(this, &UMeleeAbility::HitTargetLocal);
+			}
+			HitboxController->ClearOverlaps();
 		}
 	}
-	Task->OnCompleted.AddDynamic(this, &UMeleeAbility::EndAbilityManual);
-
-	Task->ReadyForActivation();
-}
-
-
-void UMeleeAbility::HandleMontageEnd()
-{
-	const AActor* AvatarActor = GetAvatarActorFromActorInfo();
-	UHitboxController* HitboxController = AvatarActor ? AvatarActor->FindComponentByClass<UHitboxController>() : nullptr;
-	if (HitboxController != nullptr)
+	else
 	{
-		HitboxController->ClearOverlaps();
+		FName PreviousComboState = CurrentComboState;
+		if (ACharacterBase* CharacterBase = Cast<ACharacterBase>(ActorInfo->AvatarActor))
+		{
+			CurrentComboState = CharacterBase->GetComboState();
+		}
+		if (MeleeAnimation->IsValidSectionName(CurrentComboState))
+		{
+			MontageSetNextSectionName(PreviousComboState, CurrentComboState);
+			UE_LOG(LogAbilitySystem, Display, TEXT("Setting montage section from %s to %s"), *PreviousComboState.ToString(), * CurrentComboState.ToString());
+		}
 	}
 }
 
 
 void UMeleeAbility::EndAbilityManual()
 {
-	// UE_LOG(LogAbilitySystem, Display, TEXT("Ability ended Manually."));
+	UE_LOG(LogAbilitySystem, Display, TEXT("Ability ended Manually."));
 	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true, false);
 }
 
@@ -115,13 +104,27 @@ void UMeleeAbility::EndAbilityManual()
 void UMeleeAbility::HitTarget(const FHitResult& HitResult)
 {
 	OnTargetHit(HitResult);
-	if (HitEffect)
+	int SectionIndex = 0;
+
+	if (UActorComponent* Component = GetCurrentActorInfo()->OwnerActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()))
 	{
-		const FGameplayEffectSpecHandle HitEffectSpec = MakeOutgoingGameplayEffectSpec(HitEffect);
+		USkeletalMeshComponent* SkeletalMeshComp = Cast<USkeletalMeshComponent>(Component);
+		SectionIndex = MeleeAnimation->GetSectionIndex(SkeletalMeshComp->GetAnimInstance()->Montage_GetCurrentSection());
+	}
+	
+	if (HitEffects.IsValidIndex(SectionIndex))
+	{
+		const FGameplayEffectSpecHandle HitEffectSpec = MakeOutgoingGameplayEffectSpec(HitEffects[SectionIndex]);
 		FGameplayAbilityTargetDataHandle TargetDataHandle;
+	
 		TargetDataHandle.Add(new FGameplayAbilityTargetData_SingleTargetHit(HitResult));
 		
 		ApplyGameplayEffectSpecToTarget(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(),
 			HitEffectSpec, TargetDataHandle);
 	}
+}
+
+void UMeleeAbility::HitTargetLocal(const FHitResult& HitResult)
+{
+	OnTargetHit(HitResult);
 }
