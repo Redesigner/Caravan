@@ -3,9 +3,7 @@
 
 #include "MeleeAbility.h"
 
-#include "AbilitySystemComponent.h"
-#include "Tasks/PlayMontageTask.h"
-#include "Abilities/Tasks/AbilityTask_NetworkSyncPoint.h"
+#include "CaravanAbility/GameplayAbilities/Components/CharacterAbilitySystemComponent.h"
 #include "CaravanAbility/Character/CharacterBase.h"
 #include "CaravanAbility/Character/CharacterBaseMovementComponent.h"
 
@@ -56,11 +54,14 @@ void UMeleeAbility::ExecuteAttack(const FGameplayAbilitySpecHandle Handle, const
 	}
 	if (InitialAttack)
 	{
-		CurrentComboState = InitialComboState;
-		UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("AnimationMontageTask"), MeleeAnimation, 1.0f, CurrentComboState, false);
+		UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("AnimationMontageTask"), MeleeAnimation, 1.0f, MontageSectionName, false);
 		// Make sure to call the end ability function at the end of the ability, or cooldowns etc. won't work
-		Task->OnCompleted.AddDynamic(this, &UMeleeAbility::EndAbilityManual);
-		Task->ReadyForActivation();
+		MontageTask->OnBlendOut.AddDynamic(this, &UMeleeAbility::EndAbilityManual);
+		// If the ability gets interrupted, manually call it as well.
+		// TODO: The abilities shouldn't be interrupted, but it *can* happen currently
+		MontageTask->OnInterrupted.AddDynamic(this, &UMeleeAbility::EndAbilityManual);
+
+		MontageTask->ReadyForActivation();
 
 		// Bind our hit functions to the hitbox controller
 		if (UActorComponent* ActorComponent = ActorInfo->AvatarActor->GetComponentByClass(UHitboxController::StaticClass()))
@@ -78,25 +79,20 @@ void UMeleeAbility::ExecuteAttack(const FGameplayAbilitySpecHandle Handle, const
 			HitboxController->ClearOverlaps();
 		}
 	}
-	else
+	if (UCharacterAbilitySystemComponent* CharacterASC = Cast<UCharacterAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo()))
 	{
-		FName PreviousComboState = CurrentComboState;
-		if (ACharacterBase* CharacterBase = Cast<ACharacterBase>(ActorInfo->AvatarActor))
-		{
-			CurrentComboState = CharacterBase->GetComboState();
-		}
-		if (MeleeAnimation->IsValidSectionName(CurrentComboState))
-		{
-			MontageSetNextSectionName(PreviousComboState, CurrentComboState);
-			UE_LOG(LogAbilitySystem, Display, TEXT("Setting montage section from %s to %s"), *PreviousComboState.ToString(), * CurrentComboState.ToString());
-		}
+		CharacterASC->SetNextComboAbility(NextComboState);
 	}
 }
 
 
 void UMeleeAbility::EndAbilityManual()
 {
-	UE_LOG(LogAbilitySystem, Display, TEXT("Ability ended Manually."));
+	UE_LOG(LogAbilitySystem, Display, TEXT("[%s] Ability ended Manually."), HasAuthority(&CurrentActivationInfo) ? TEXT("Authority") : TEXT("Proxy") );
+	if (UCharacterAbilitySystemComponent* CharacterASC = Cast<UCharacterAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo()))
+	{
+		CharacterASC->SetNextComboAbility(TEXT("NONE"));
+	}
 	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true, false);
 }
 
@@ -104,17 +100,11 @@ void UMeleeAbility::EndAbilityManual()
 void UMeleeAbility::HitTarget(const FHitResult& HitResult)
 {
 	OnTargetHit(HitResult);
-	int SectionIndex = 0;
+	ApplyGameplayCue(HitResult);
 
-	if (UActorComponent* Component = GetCurrentActorInfo()->OwnerActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()))
+	if (HitEffect)
 	{
-		USkeletalMeshComponent* SkeletalMeshComp = Cast<USkeletalMeshComponent>(Component);
-		SectionIndex = MeleeAnimation->GetSectionIndex(SkeletalMeshComp->GetAnimInstance()->Montage_GetCurrentSection());
-	}
-	
-	if (HitEffects.IsValidIndex(SectionIndex))
-	{
-		const FGameplayEffectSpecHandle HitEffectSpec = MakeOutgoingGameplayEffectSpec(HitEffects[SectionIndex]);
+		const FGameplayEffectSpecHandle HitEffectSpec = MakeOutgoingGameplayEffectSpec(HitEffect);
 		FGameplayAbilityTargetDataHandle TargetDataHandle;
 	
 		TargetDataHandle.Add(new FGameplayAbilityTargetData_SingleTargetHit(HitResult));
@@ -124,7 +114,38 @@ void UMeleeAbility::HitTarget(const FHitResult& HitResult)
 	}
 }
 
+
 void UMeleeAbility::HitTargetLocal(const FHitResult& HitResult)
 {
 	OnTargetHit(HitResult);
+	ApplyGameplayCue(HitResult);
+}
+
+
+void UMeleeAbility::ApplyGameplayCue(const FHitResult& HitResult)
+{
+	AActor* Owner = GetOwningActorFromActorInfo();
+
+	if (UCharacterAbilitySystemComponent* CharacterASC = Cast<UCharacterAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo()))
+	{
+		FGameplayAbilityTargetDataHandle TargetDataHandle;
+		TargetDataHandle.Add(new FGameplayAbilityTargetData_SingleTargetHit(HitResult));
+
+		FGameplayCueParameters GameplayCueParams = FGameplayCueParameters();
+		GameplayCueParams.EffectContext = GetContextFromOwner(TargetDataHandle);
+		GameplayCueParams.Location = HitResult.Location;
+		GameplayCueParams.Normal = HitResult.Normal;
+
+		if (Owner->GetLocalRole() == ENetRole::ROLE_AutonomousProxy)
+		{
+			// The ability was predicted, so apply the cue locally
+			GameplayCueParams.Instigator = Owner->GetOwner();
+			CharacterASC->ExecuteGameplayCueLocal(GameplayCueSelf, GameplayCueParams);
+		}
+		else
+		{
+			GameplayCueParams.Instigator = nullptr;
+			CharacterASC->ExecuteGameplayCue(GameplayCueSelf, GameplayCueParams);
+		}
+	}
 }

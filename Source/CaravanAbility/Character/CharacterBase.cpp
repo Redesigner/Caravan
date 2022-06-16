@@ -109,21 +109,19 @@ void ACharacterBase::GrantAbilities()
 	UE_LOG(LogTemp, Display, TEXT("Granting default abilities to character"));
 	for (int i = 0; i < DefaultAbilities.Num(); i++)
 	{
+		// Only bind the first ability, for now. I need to change this later
 		TSubclassOf<UCaravanGameplayAbility>& StartupAbility = DefaultAbilities[i];
-		AbilitySystem->GiveAbility(FGameplayAbilitySpec(StartupAbility, 0, i));
+		if (i == 0)
+		{
+			AbilitySystem->GiveAbility(FGameplayAbilitySpec(StartupAbility, 0, i));
+		}
+		else
+		{
+			AbilitySystem->GiveAbility(FGameplayAbilitySpec(StartupAbility, 0, -1));
+		}
 	}
 
 	AbilitySystem->bAbilitiesInitialized = true;
-}
-
-void ACharacterBase::SetComboState(FName NewComboState)
-{
-	ComboState = NewComboState;
-}
-
-FName ACharacterBase::GetComboState() const
-{
-	return ComboState;
 }
 
 

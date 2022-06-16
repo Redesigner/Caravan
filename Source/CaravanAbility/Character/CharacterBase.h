@@ -47,7 +47,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
+	/// <summary>
+	/// Bind inputs for movement and GameplayAbilities
+	/// </summary>
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void PossessedBy(AController* NewController) override;
@@ -59,15 +61,16 @@ public:
 	
 	void GrantAbilities();
 
-	void SetComboState(FName NewComboState);
-	FName GetComboState() const;
-
+	// Movement functions and UFUNCTION bindings.
+	// UFUNCTION bindings are necessary for these abilities to be called by the default AI controller
 	UFUNCTION()
 	void MoveForward(float Scale);
 	UFUNCTION()
 	void MoveRight(float Scale);
 
+	UFUNCTION()
 	void LookUp(float Scale);
+	UFUNCTION()
 	void LookRight(float Scale);
 
 private:
@@ -76,9 +79,6 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Abilities, meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<UCaravanGameplayAbility>> DefaultAbilities;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Abilities, meta = (AllowPrivateAccess = "true"))
-	FName ComboState;
 };
 
 

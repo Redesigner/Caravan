@@ -8,8 +8,8 @@
 
 UCharacterBaseAttributeSet::UCharacterBaseAttributeSet()
 {
-	MovementSpeed.SetBaseValue(600.0f);
-	MovementSpeed.SetCurrentValue(600.0f);
+	MovementSpeed.SetBaseValue(300.0f);
+	MovementSpeed.SetCurrentValue(300.0f);
 
 	CurrentHealth.SetBaseValue(100.0f);
 	CurrentHealth.SetCurrentValue(100.0f);

@@ -16,4 +16,8 @@ class CARAVANABILITY_API UCaravanGameplayAbility : public UGameplayAbility
 	GENERATED_BODY()
 
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+
+public:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Input)
+	bool bActivateOnInput = true;
 };

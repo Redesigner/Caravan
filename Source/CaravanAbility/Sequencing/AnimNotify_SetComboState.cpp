@@ -18,6 +18,6 @@ void UAnimNotify_SetComboState::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 	AActor* Owner = MeshComp->GetOwner();
 	if (ACharacterBase* CharacterBase = Cast<ACharacterBase>(Owner))
 	{
-		CharacterBase->SetComboState(ComboState);
+		// CharacterBase->SetComboState(ComboState);
 	}
 }
