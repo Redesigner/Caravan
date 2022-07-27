@@ -10,6 +10,16 @@
 /**
  * 
  */
+UENUM(BlueprintType)
+enum class EMeleeInputID : uint8
+{
+	Attack		UMETA(DisplayName = "Attack"),
+	Secondary	UMETA(DisplayName = "Secondary"),
+	None		UMETA(DisplayName = "None"),
+	Confirm		UMETA(DisplayName = "Confirm"),
+	Cancel		UMETA(DisplayName = "Cancel")
+};
+
 UCLASS()
 class CARAVANABILITY_API UCaravanGameplayAbility : public UGameplayAbility
 {
@@ -18,6 +28,9 @@ class CARAVANABILITY_API UCaravanGameplayAbility : public UGameplayAbility
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
 public:
+	UPROPERTY(EditAnywhere, Category = Input)
+	EMeleeInputID InputBinding = EMeleeInputID::None;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Input)
 	bool bActivateOnInput = true;
 };

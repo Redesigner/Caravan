@@ -4,6 +4,7 @@
 #include "CharacterAbilitySystemComponent.h"
 
 #include "AbilitySystemGlobals.h"
+#include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayCueManager.h"
 #include "CaravanAbility/GameplayAbilities/CaravanGameplayAbility.h"
 #include "CaravanAbility/CaravanAbility.h"
@@ -127,7 +128,7 @@ void UCharacterAbilitySystemComponent::NotifyAbilityEnded(FGameplayAbilitySpecHa
 	FGameplayTag NextAbility;
 	if (GetNextValidQueuedAbility(NextAbility))
 	{
-		if (TryActivateAbilitiesByTag(FGameplayTagContainer(NextAbility)))
+		if (TryActivateAbilitiesByTag(NextAbility.GetSingleTagContainer()))
 		{
 			UE_LOG(LogAbilityQueue, Display, TEXT("[%s] Ability retrieved from queue: '%s'"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"), *NextAbility.ToString());
 		}
@@ -144,20 +145,12 @@ void UCharacterAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
 	FGameplayTag AbilityTag;
 	if (CurrentComboState.GetGameplayTagFromInput(InputID, AbilityTag) )
 	{
-		for (FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
+		// If we couldn't activate the ability, add it to the queue
+		if (!TryActivateAbilitiesByTag(AbilityTag.GetSingleTagContainer()) )
 		{
-			if (AbilitySpec.IsActive())
-			{
-				UE_LOG(LogAbilityQueue, Display, TEXT("[%s] Ability '%s' currently active, queuing ability '%s'"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"), *AbilitySpec.Ability->GetName(), *AbilityTag.ToString());
-				QueueAbility(AbilityTag);
-				return;
-			}
+			QueueAbility(AbilityTag);
+			return;
 		}
-		// If there are no abilities active, don't try to add this to the queue
-		// Since the queue is only checked when an ability ends,
-		// adding it to the queue with no active ability
-		// means it will never get called
-		TryActivateAbilitiesByTag(FGameplayTagContainer(AbilityTag));
 	}
 	else
 	{

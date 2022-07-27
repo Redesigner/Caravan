@@ -3,8 +3,11 @@
 
 #include "CharacterBase.h"
 
+#include "CaravanAbility/CaravanAbility.h"
+
 #include "CharacterBaseMovementComponent.h"
 #include "Camera/CameraComponent.h"
+#include "CaravanAbility/DecalFadeComponent.h" 
 #include "CaravanAbility/GameplayAbilities/Components/CharacterAbilitySystemComponent.h"
 #include "CaravanAbility/GameplayAbilities/MeleeAbility.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -57,7 +60,6 @@ void ACharacterBase::BeginPlay()
 void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 
@@ -80,6 +82,31 @@ void ACharacterBase::PossessedBy(AController* NewController)
 	if (AbilitySystem)
 	{
 		AbilitySystem->InitAbilityActorInfo(this, this);
+	}
+
+	if (TargetingReticle.IsValid())
+	{
+		// Reticles are owned by the controller, rather than the server
+		TargetingReticle->SetOwner(NewController);
+		UE_LOG(LogTargetingSystem, Display, TEXT("%s Making targeting reticle an autonomous proxy."),
+			GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"));
+		TargetingReticle->SetAutonomousProxy(true);
+		TargetingReticle->SetController(NewController);
+	}
+	else
+	{
+		UE_LOG(LogTargetingSystem, Display, TEXT("%s Attempting to assign targeting reticle controller for actor %s, but no targeting reticle was found."),
+			GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"),
+			*GetName())
+	}
+}
+
+
+void ACharacterBase::OnConstruction(const FTransform& Transform)
+{
+	if (HasAuthority())
+	{
+		SpawnTargetingReticle();
 	}
 }
 
@@ -106,22 +133,60 @@ void ACharacterBase::GrantAbilities()
 
 	AbilitySystem->InitAbilityActorInfo(this, this);
 
-	UE_LOG(LogTemp, Display, TEXT("Granting default abilities to character"));
-	for (int i = 0; i < DefaultAbilities.Num(); i++)
+	UE_LOG(LogAbilitySystem, Display, TEXT("Granting default abilities to character"));
+	for (TSubclassOf<UCaravanGameplayAbility> Ability: DefaultAbilities)
 	{
-		// Only bind the first ability, for now. I need to change this later
-		TSubclassOf<UCaravanGameplayAbility>& StartupAbility = DefaultAbilities[i];
-		if (i == 0)
+		if (UCaravanGameplayAbility* CaravanAbility = Cast<UCaravanGameplayAbility>(Ability.GetDefaultObject() ))
 		{
-			AbilitySystem->GiveAbility(FGameplayAbilitySpec(StartupAbility, 0, i));
-		}
-		else
-		{
-			AbilitySystem->GiveAbility(FGameplayAbilitySpec(StartupAbility, 0, -1));
+			if (CaravanAbility->InputBinding == EMeleeInputID::None)
+			{
+				AbilitySystem->GiveAbility(FGameplayAbilitySpec(Ability, 0, -1));
+			}
+			else
+			{
+				AbilitySystem->GiveAbility(FGameplayAbilitySpec(Ability, 0, static_cast<uint8>(CaravanAbility->InputBinding)));
+			}
 		}
 	}
-
 	AbilitySystem->bAbilitiesInitialized = true;
+}
+
+
+void ACharacterBase::SpawnTargetingReticle()
+{
+	if (TargetingReticle.IsValid())
+	{
+		// Destroy our old targeting reticle
+		TargetingReticle->Destroy();
+	}
+	if (TargetingReticleClass)
+	{
+		UE_LOG(LogTargetingSystem, Display, TEXT("%s %s spawned new Targeting Reticle Actor."),
+			GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"),
+			*GetName());
+		TargetingReticle = GetWorld()->SpawnActor<ATargetingReticleActor>(TargetingReticleClass, GetActorTransform());
+	}
+}
+
+
+void ACharacterBase::ShowTargetingReticle()
+{
+	if (TargetingReticle.IsValid())
+	{
+		TargetingReticle->FadeIn();
+	}
+}
+
+
+const FVector ACharacterBase::HideTargetingReticle()
+{
+	if (TargetingReticle.IsValid())
+	{
+		TargetingReticle->FadeOut();
+		return TargetingReticle->GetGroundLocation();
+	}
+	UE_LOG(LogTargetingSystem, Warning, TEXT("Unable to find a targeting reticle"));
+	return FVector(0.0f, 0.0f, 100.0f);
 }
 
 

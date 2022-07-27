@@ -6,10 +6,14 @@
 #include "Abilities/GameplayAbility.h"
 #include "CaravanAbility/GameplayAbilities/CaravanGameplayAbility.h"
 #include "GameFramework/Character.h"
+#include "TargetingReticleComponent.h"
 #include "AbilitySystemInterface.h" 
 #include "CharacterBaseAttributeSet.h"
 #include "GameplayCueInterface.h"
+
 #include "CaravanAbility/GameplayAbilities/Components/HitboxController.h"
+#include "CaravanAbility/GameplayAbilities/TargetingReticleActor.h"
+
 #include "CharacterBase.generated.h"
 
 class USphereComponent;
@@ -18,6 +22,9 @@ UCLASS()
 class CARAVANABILITY_API ACharacterBase : public ACharacter, public IAbilitySystemInterface, public IGameplayCueInterface
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Targeting, meta = (AllowPrivateAccess = "true"))
+	TWeakObjectPtr<ATargetingReticleActor> TargetingReticle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
@@ -54,12 +61,22 @@ public:
 
 	virtual void PossessedBy(AController* NewController) override;
 
+	virtual void OnConstruction(const FTransform& Transform) override;
+
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
 	UCharacterBaseAttributeSet* GetAttributeSetBase() const;
 	
 	void GrantAbilities();
+
+
+	// Targeting reticle functions. Should these be moved somewhere else?
+	void SpawnTargetingReticle();
+
+	void ShowTargetingReticle();
+
+	const FVector HideTargetingReticle();
 
 	// Movement functions and UFUNCTION bindings.
 	// UFUNCTION bindings are necessary for these abilities to be called by the default AI controller
@@ -74,20 +91,12 @@ public:
 	void LookRight(float Scale);
 
 private:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Targeting, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<ATargetingReticleActor> TargetingReticleClass;
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	float LookSpeed = 50.0f;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Abilities, meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<UCaravanGameplayAbility>> DefaultAbilities;
-};
-
-
-UENUM(BlueprintType)
-enum class EMeleeInputID : uint8
-{
-	Attack		UMETA(DisplayName = "Attack"),
-	Secondary	UMETA(DisplayName = "Secondary"),
-	None		UMETA(DisplayName = "None"),
-	Confirm		UMETA(DisplayName = "Confirm"),
-	Cancel		UMETA(DisplayName = "Cancel")
 };
