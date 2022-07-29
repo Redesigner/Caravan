@@ -29,6 +29,11 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
+	virtual void PostNetReceiveLocationAndRotation() override;
+
+
 	UFUNCTION( BlueprintImplementableEvent )
 	void OnFadeIn();
 
@@ -38,31 +43,38 @@ public:
 	UFUNCTION( BlueprintCallable )
 	FVector GetGroundLocation();
 
-	UFUNCTION( NetMulticast, Unreliable )
-	void MulticastUpdateLocation(FVector Location);
+	UFUNCTION(Server, Reliable)
+	void ServerSetLocation(FVector Location);
 
-	UFUNCTION( Server, Unreliable )
-	void ClientSetLocation(FVector Location);
-
-	UFUNCTION( NetMulticast, Unreliable, BlueprintCallable )
-	void MulticastSetReticleMovementMode(EReticleMovementMode NewMovementMode);
-
-	void SetController(AController* NewController);
-
+	UFUNCTION( NetMulticast, Reliable )
 	void FadeIn();
 
+	UFUNCTION(NetMulticast, Reliable)
 	void FadeOut();
 
+	void SetOwningPawn(APawn* NewPawn);
+
+	UFUNCTION()
+	void OnRep_SetOwningPawn();
+
 private:
+	FVector GetSmoothedLocation(const float DeltaTime) const;
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float MovementSpeed = 100.0f;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Movement|Replication", meta = (AllowPrivateAccess = "true"))
+	float MinDelay = 0.1f;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Movement|Replication", meta = (AllowPrivateAccess = "true"))
+	float MaxDelay = 1.0f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Movement, meta = (AllowPrivateAccess = "true"), Replicated)
 	TEnumAsByte<EReticleMovementMode> MovementMode = FollowOnwer;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	bool bGet = true;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = Movement, meta = (AllowPrivateAccess = "true"), ReplicatedUsing = OnRep_SetOwningPawn)
+	APawn* OwningPawn;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = Ownership, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<AController> Controller;
+	// Client only
+	FVector DesiredLocation;
 };

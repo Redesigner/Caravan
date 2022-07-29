@@ -23,8 +23,8 @@ class CARAVANABILITY_API ACharacterBase : public ACharacter, public IAbilitySyst
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Targeting, meta = (AllowPrivateAccess = "true"))
-	TWeakObjectPtr<ATargetingReticleActor> TargetingReticle;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Targeting, meta = (AllowPrivateAccess = "true"), Replicated)
+	ATargetingReticleActor* TargetingReticle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
@@ -62,6 +62,8 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 
 	virtual void OnConstruction(const FTransform& Transform) override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 

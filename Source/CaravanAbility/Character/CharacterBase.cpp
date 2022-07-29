@@ -13,6 +13,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
+#include "Net/UnrealNetwork.h"
+
 // Sets default values
 ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer) :
 	ACharacter(ObjectInitializer.SetDefaultSubobjectClass(ACharacter::CharacterMovementComponentName, UCharacterBaseMovementComponent::StaticClass()))
@@ -72,6 +74,18 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAxis("LookY", this, &ACharacterBase::LookUp);
 	
 	AbilitySystem->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EMeleeInputID"));
+
+
+	if (TargetingReticle)
+	{
+		TargetingReticle->InputComponent = PlayerInputComponent;
+	}
+	else
+	{
+		UE_LOG(LogTargetingSystem, Display, TEXT("%s Attempting to assign targeting reticle controller for actor %s, but no targeting reticle was found."),
+			GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"),
+			*GetName())
+	}
 }
 
 
@@ -84,20 +98,10 @@ void ACharacterBase::PossessedBy(AController* NewController)
 		AbilitySystem->InitAbilityActorInfo(this, this);
 	}
 
-	if (TargetingReticle.IsValid())
+	if (TargetingReticle)
 	{
-		// Reticles are owned by the controller, rather than the server
-		TargetingReticle->SetOwner(NewController);
-		UE_LOG(LogTargetingSystem, Display, TEXT("%s Making targeting reticle an autonomous proxy."),
-			GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"));
+		TargetingReticle->SetOwner(GetController());
 		TargetingReticle->SetAutonomousProxy(true);
-		TargetingReticle->SetController(NewController);
-	}
-	else
-	{
-		UE_LOG(LogTargetingSystem, Display, TEXT("%s Attempting to assign targeting reticle controller for actor %s, but no targeting reticle was found."),
-			GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"),
-			*GetName())
 	}
 }
 
@@ -108,6 +112,14 @@ void ACharacterBase::OnConstruction(const FTransform& Transform)
 	{
 		SpawnTargetingReticle();
 	}
+}
+
+
+void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	DOREPLIFETIME(ACharacterBase, TargetingReticle);
+
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
 
@@ -154,10 +166,9 @@ void ACharacterBase::GrantAbilities()
 
 void ACharacterBase::SpawnTargetingReticle()
 {
-	if (TargetingReticle.IsValid())
+	if (TargetingReticle)
 	{
-		// Destroy our old targeting reticle
-		TargetingReticle->Destroy();
+		return;
 	}
 	if (TargetingReticleClass)
 	{
@@ -165,13 +176,14 @@ void ACharacterBase::SpawnTargetingReticle()
 			GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"),
 			*GetName());
 		TargetingReticle = GetWorld()->SpawnActor<ATargetingReticleActor>(TargetingReticleClass, GetActorTransform());
+		TargetingReticle->SetOwningPawn(this);
 	}
 }
 
 
 void ACharacterBase::ShowTargetingReticle()
 {
-	if (TargetingReticle.IsValid())
+	if (TargetingReticle)
 	{
 		TargetingReticle->FadeIn();
 	}
@@ -180,12 +192,12 @@ void ACharacterBase::ShowTargetingReticle()
 
 const FVector ACharacterBase::HideTargetingReticle()
 {
-	if (TargetingReticle.IsValid())
+	if (TargetingReticle)
 	{
 		TargetingReticle->FadeOut();
 		return TargetingReticle->GetGroundLocation();
 	}
-	UE_LOG(LogTargetingSystem, Warning, TEXT("Unable to find a targeting reticle"));
+	UE_LOG(LogTargetingSystem, Warning, TEXT("%s Unable to find a targeting reticle"), GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"));
 	return FVector(0.0f, 0.0f, 100.0f);
 }
 

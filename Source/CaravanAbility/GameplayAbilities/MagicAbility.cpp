@@ -88,8 +88,14 @@ void UMagicAbility::EndAbilityManual(float HeldTime)
 		UCharacterMovementComponent* CharacterMovementComponent = Cast<UCharacterMovementComponent>(Character->GetMovementComponent());
 		CharacterMovementComponent->RemoveRootMotionSource(TEXT("HoldStillRootMotion"));
 	}
+	AActor* Owner = GetOwningActorFromActorInfo();
 
-	if (HeldTime >= MinCastTime)
+	float AdjustedCastTime = MinCastTime;
+	if (Owner->GetLocalRole() == ENetRole::ROLE_AutonomousProxy)
+	{
+		// AdjustedCastTime -= 0.05f;
+	}
+	if (HeldTime >= AdjustedCastTime)
 	{
 		if (SpellAbility.IsValid())
 		{
@@ -102,6 +108,7 @@ void UMagicAbility::EndAbilityManual(float HeldTime)
 				// EventData normally holds a handle to a nullptr
 				FGameplayEventData EventData;
 				FGameplayEffectContext* AbilityContext = new FGameplayEffectContext();
+				EventData.Instigator = Owner;
 				EventData.EventTag = SpellAbility;
 				EventData.ContextHandle = AbilityContext;
 				AbilityContext->AddOrigin(SpellLocation);
