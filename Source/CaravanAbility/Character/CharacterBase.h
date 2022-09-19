@@ -11,6 +11,8 @@
 #include "CharacterBaseAttributeSet.h"
 #include "GameplayCueInterface.h"
 
+#include "Components/PrimitiveComponent.h"
+
 #include "CaravanAbility/GameplayAbilities/Components/HitboxController.h"
 #include "CaravanAbility/GameplayAbilities/TargetingReticleActor.h"
 
@@ -41,7 +43,10 @@ class CARAVANABILITY_API ACharacterBase : public ACharacter, public IAbilitySyst
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Attributes, meta = (AllowPrivateAccess = "true"))
 	UCharacterBaseAttributeSet* AttributeSet;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attributes, meta = (AllowPrivateAccess = "true"))
+	UPrimitiveComponent* InteractionVolume;
+
 public:
 	// Sets default values for this character's properties
 	ACharacterBase(const FObjectInitializer& ObjectInitializer);
@@ -92,7 +97,27 @@ public:
 	UFUNCTION()
 	void LookRight(float Scale);
 
+	UFUNCTION()
+	void Interact();
+
+	void PauseMovement();
+
+	void UnpauseMovement();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HandleInteraction(AActor* Source, AActor* Initializer);
+
 private:
+	
+	UFUNCTION(Server, Reliable)
+	void PauseMovementServer();
+	void PauseMovementLocal();
+
+	UFUNCTION(Server, Reliable)
+	void UnpauseMovementServer();
+	void UnpauseMovementLocal();
+
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Targeting, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<ATargetingReticleActor> TargetingReticleClass;
 

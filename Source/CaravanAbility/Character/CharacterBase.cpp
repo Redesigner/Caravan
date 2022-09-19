@@ -42,6 +42,9 @@ ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer) :
 	HitboxController = CreateDefaultSubobject<UHitboxController>(TEXT("Hitbox Controller"));
 	HitboxController->SetupAttachment(RootComponent);
 
+	InteractionVolume = CreateDefaultSubobject<USphereComponent>(TEXT("Interaction Volume"));
+	InteractionVolume->SetupAttachment(RootComponent);
+
 	AttributeSet = CreateDefaultSubobject<UCharacterBaseAttributeSet>(TEXT("Character attribute set"));
 }
 
@@ -72,6 +75,8 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAxis("LookX", this, &ACharacterBase::LookRight);
 	PlayerInputComponent->BindAxis("LookY", this, &ACharacterBase::LookUp);
+
+	// PlayerInputComponent->BindAction("Interact", EInputEvent::IE_Pressed, this, &ACharacterBase::Interact);
 	
 	AbilitySystem->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EMeleeInputID"));
 
@@ -237,4 +242,64 @@ void ACharacterBase::LookUp(float Scale)
 void ACharacterBase::LookRight(float Scale)
 {
 	AddControllerYawInput(LookSpeed * Scale * GetWorld()->GetDeltaSeconds());
+}
+
+
+void ACharacterBase::Interact()
+{
+	if (!InteractionVolume)
+	{
+		return;
+	}
+	TArray<AActor*> OverlappingActors;
+	InteractionVolume->GetOverlappingActors(OverlappingActors);
+	for (AActor* Target : OverlappingActors)
+	{
+		if (ACharacterBase* Character = Cast<ACharacterBase>(Target))
+		{
+			Character->HandleInteraction(this, GetOwner());
+		}
+	}
+}
+
+
+void ACharacterBase::PauseMovement()
+{
+	PauseMovementServer();
+	PauseMovementLocal();
+}
+
+
+void ACharacterBase::UnpauseMovement()
+{
+	UnpauseMovementServer();
+	UnpauseMovementLocal();
+}
+
+void ACharacterBase::PauseMovementLocal()
+{
+	UCharacterMovementComponent* CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
+	TSharedPtr<FRootMotionSource_ConstantForce> RootMotionSource = MakeShared<FRootMotionSource_ConstantForce>();
+	RootMotionSource->Duration = -1.0f;
+	RootMotionSource->AccumulateMode = ERootMotionAccumulateMode::Override;
+	RootMotionSource->InstanceName = TEXT("HoldStillRootMotion");
+	RootMotionSource->bInLocalSpace = false;
+
+	CharacterMovementComponent->ApplyRootMotionSource(RootMotionSource);
+}
+
+void ACharacterBase::UnpauseMovementLocal()
+{
+	UCharacterMovementComponent* CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
+	CharacterMovementComponent->RemoveRootMotionSource(TEXT("HoldStillRootMotion"));
+}
+
+void ACharacterBase::PauseMovementServer_Implementation()
+{
+	PauseMovementLocal();
+}
+
+void ACharacterBase::UnpauseMovementServer_Implementation()
+{
+	UnpauseMovementLocal();
 }

@@ -37,14 +37,7 @@ void UMagicAbility::CommitExecute(const FGameplayAbilitySpecHandle Handle, const
 	if (ACharacterBase* Character = Cast<ACharacterBase>(GetOwningActorFromActorInfo()) )
 	{
 		Character->ShowTargetingReticle();
-		UCharacterMovementComponent* CharacterMovementComponent = Cast<UCharacterMovementComponent>(Character->GetMovementComponent());
-		TSharedPtr<FRootMotionSource_ConstantForce> RootMotionSource = MakeShared<FRootMotionSource_ConstantForce>();
-		RootMotionSource->Duration = -1.0f;
-		RootMotionSource->AccumulateMode = ERootMotionAccumulateMode::Override;
-		RootMotionSource->InstanceName = TEXT("HoldStillRootMotion");
-		RootMotionSource->bInLocalSpace = false;
-
-		CharacterMovementComponent->ApplyRootMotionSource(RootMotionSource);
+		Character->PauseMovement();
 	}
 }
 
@@ -85,8 +78,7 @@ void UMagicAbility::EndAbilityManual(float HeldTime)
 	{
 		SpellLocation = Character->HideTargetingReticle();
 		UE_LOG(LogTargetingSystem, Display, TEXT("Reticle removed at '%s'"), *SpellLocation.ToString());
-		UCharacterMovementComponent* CharacterMovementComponent = Cast<UCharacterMovementComponent>(Character->GetMovementComponent());
-		CharacterMovementComponent->RemoveRootMotionSource(TEXT("HoldStillRootMotion"));
+		Character->UnpauseMovement();
 	}
 	AActor* Owner = GetOwningActorFromActorInfo();
 

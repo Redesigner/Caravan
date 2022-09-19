@@ -14,10 +14,22 @@ class CARAVANABILITY_API AEnemyController : public AAIController
 {
 	GENERATED_BODY()
 
+	AEnemyController();
+
 public:
 	virtual void Tick(float DeltaTime) override;
+	virtual void BeginPlay() override;
+
+	void TargetSpawned(AActor* Target);
 
 protected:
-	virtual TArray<AActor> GetTargets() const;
-	
+	TArray<TWeakObjectPtr<AActor>> GetTargets() const;
+	virtual bool IsTarget(AActor* Target) const;
+
+private:
+	TWeakObjectPtr<AActor> GetClosestTarget() const;
+	TArray<TWeakObjectPtr<AActor>> PotentialTargets;
+
+	UPROPERTY(VisibleInstanceOnly, Category = Targeting, meta = (AllowPrivateAccess = true))
+	TWeakObjectPtr<AActor> CurrentTarget;
 };
