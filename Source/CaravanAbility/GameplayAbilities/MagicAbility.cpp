@@ -8,7 +8,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h" 
 #include "AbilitySystemComponent.h"
 #include "CaravanAbility/Character/CharacterBase.h"
-#include "CaravanAbility/Character/CharacterBaseMovementComponent.h"
+#include "CaravanAbility/Character/Components/CharacterBaseMovementComponent.h"
 #include "Components/CharacterAbilitySystemComponent.h"
 
 UMagicAbility::UMagicAbility()

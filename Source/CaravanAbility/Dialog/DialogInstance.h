@@ -10,19 +10,19 @@ struct CARAVANABILITY_API FDialogInstance : public FTableRowBase
 {
 	GENERATED_USTRUCT_BODY()
 
-	// UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	// FGameplayTag GameplayTag;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FString Text = TEXT("None");
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	FString Text;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	bool bCanAdvance;
-
-	// UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (EditCondition = bCanAdvance) )
-	// FGameplayTag NextDialogTag;
+	bool bCanAdvance = false;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (EditCondition = bCanAdvance))
-	FName NextDialog;
+	FName NextDialog = TEXT("None");
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bCanRespond = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (EditCondition = bCanAdvance))
+	TArray<FString> Responses;
 };
 

@@ -4,10 +4,11 @@
 #include "CharacterBase.h"
 
 #include "CaravanAbility/CaravanAbility.h"
+#include "CaravanAbility/Player/CaravanPlayerController.h"
 
-#include "CharacterBaseMovementComponent.h"
+#include "CaravanAbility/Character/Components/CharacterBaseMovementComponent.h"
 #include "Camera/CameraComponent.h"
-#include "CaravanAbility/DecalFadeComponent.h" 
+#include "CaravanAbility/Character/Components/DecalFadeComponent.h" 
 #include "CaravanAbility/GameplayAbilities/Components/CharacterAbilitySystemComponent.h"
 #include "CaravanAbility/GameplayAbilities/MeleeAbility.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -257,9 +258,36 @@ void ACharacterBase::Interact()
 	{
 		if (ACharacterBase* Character = Cast<ACharacterBase>(Target))
 		{
-			Character->HandleInteraction(this, GetOwner());
+			Character->OnHandleInteraction(FGameplayInteraction(this, EGameplayInteractionType::Talk) );
 		}
 	}
+}
+
+void ACharacterBase::DialogStart()
+{
+	PauseMovement();
+	OnDialogStart();
+}
+
+void ACharacterBase::DialogEnd()
+{
+	UnpauseMovement();
+	OnDialogEnd();
+}
+
+void ACharacterBase::HandleInteraction(FGameplayInteraction Interaction)
+{
+	if (Interaction.InteractionType == EGameplayInteractionType::ShowDialog)
+	{
+		if (AActor* OwnerActor = GetOwner())
+		{
+			if (ACaravanPlayerController* CaravanController = Cast<ACaravanPlayerController>(OwnerActor))
+			{
+				CaravanController->ReceiveDialog(Interaction.Payload, this);
+			}
+		}
+	}
+	OnHandleInteraction(Interaction);
 }
 
 

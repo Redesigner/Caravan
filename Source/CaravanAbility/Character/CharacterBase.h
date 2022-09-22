@@ -6,15 +6,15 @@
 #include "Abilities/GameplayAbility.h"
 #include "CaravanAbility/GameplayAbilities/CaravanGameplayAbility.h"
 #include "GameFramework/Character.h"
-#include "TargetingReticleComponent.h"
 #include "AbilitySystemInterface.h" 
 #include "CharacterBaseAttributeSet.h"
 #include "GameplayCueInterface.h"
+#include "CaravanAbility/Dialog/GameplayInteraction.h"
 
 #include "Components/PrimitiveComponent.h"
 
 #include "CaravanAbility/GameplayAbilities/Components/HitboxController.h"
-#include "CaravanAbility/GameplayAbilities/TargetingReticleActor.h"
+#include "CaravanAbility/GameplayAbilities/Actors/TargetingReticleActor.h"
 
 #include "CharacterBase.generated.h"
 
@@ -97,15 +97,26 @@ public:
 	UFUNCTION()
 	void LookRight(float Scale);
 
-	UFUNCTION()
-	void Interact();
-
 	void PauseMovement();
-
 	void UnpauseMovement();
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void HandleInteraction(AActor* Source, AActor* Initializer);
+	void Interact();
+
+	void DialogStart();
+	void DialogEnd();
+	UFUNCTION(BlueprintCallable)
+	void HandleInteraction(FGameplayInteraction Interaction);
+
+	// Called after the internal dialog handling is done.
+	// You should apply/remove necessary GameplayEffects here
+	UFUNCTION(BlueprintImplementableEvent, meta = (BlueprintProtected))
+	void OnDialogStart();
+	UFUNCTION(BlueprintImplementableEvent, meta = (BlueprintProtected))
+	void OnDialogEnd();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void OnHandleInteraction(FGameplayInteraction Interaction);
+
 
 private:
 	

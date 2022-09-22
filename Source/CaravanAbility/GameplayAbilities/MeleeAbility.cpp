@@ -5,7 +5,7 @@
 
 #include "CaravanAbility/GameplayAbilities/Components/CharacterAbilitySystemComponent.h"
 #include "CaravanAbility/Character/CharacterBase.h"
-#include "CaravanAbility/Character/CharacterBaseMovementComponent.h"
+#include "CaravanAbility/Character/Components/CharacterBaseMovementComponent.h"
 
 UMeleeAbility::UMeleeAbility()
 {

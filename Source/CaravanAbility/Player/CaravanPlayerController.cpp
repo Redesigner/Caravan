@@ -33,32 +33,41 @@ void ACaravanPlayerController::SetupInputComponent()
 	InputComponent->BindAction(TEXT("Interact"), EInputEvent::IE_Pressed, this, &ACaravanPlayerController::Interact);
 }
 
-void ACaravanPlayerController::ReceiveDialogInteraction(AActor* SourceNPC, FName DialogID)
+void ACaravanPlayerController::ReceiveDialog(FName Dialog, TWeakObjectPtr<ACharacterBase> CharacterReceiver)
 {
-	// TODO: Process dialog and maybe use a different class to contain the next interactions, variables, etc.
-	// Lookup dialog that has this tag.
-	// DisplayText(Dialog);
+	if (bIsDisplayingText)
+	{
+		// Right now, displayed dialog cannot be overwritten. Maybe this will change?
+		return;
+	}
 	if (!DialogTable)
 	{
 		return;
 	}
 	FString ContextString;
-	CurrentDialog = DialogTable->FindRow<FDialogInstance>(DialogID, ContextString);
+	CurrentDialog = DialogTable->FindRow<FDialogInstance>(Dialog, ContextString);
 	if (CurrentDialog)
 	{
-		DisplayText(FText::FromString(CurrentDialog->Text) );
+		if (CharacterReceiver.IsValid())
+		{
+			CurrentDialogOwner = CharacterReceiver;
+		}
+		DisplayText(FText::FromString(CurrentDialog->Text));
 	}
 }
 
 void ACaravanPlayerController::Interact()
 {
+	// Normally, we'll just forward this event to the character. Since
+	// the controller takes responsibility for displaying dialog on screen,
+	// it gets advanced here.
 	if (!bIsDisplayingText)
 	{
 		PlayerCharacter->Interact();
 	}
 	else
 	{
-		AdvanceText();
+		TryAdvanceText();
 	}
 }
 
@@ -72,11 +81,10 @@ void ACaravanPlayerController::DisplayText(FText Text)
 		DialogDisplayWidget->SetVisibility(ESlateVisibility::Visible);
 		bIsDisplayingText = true;
 	}
-	if (PlayerCharacter.IsValid())
+	if (CurrentDialogOwner.IsValid())
 	{
-		PlayerCharacter->PauseMovement();
+		CurrentDialogOwner->DialogStart();
 	}
-
 }
 
 void ACaravanPlayerController::HideText()
@@ -87,13 +95,15 @@ void ACaravanPlayerController::HideText()
 		DialogDisplayWidget->SetVisibility(ESlateVisibility::Hidden);
 		bIsDisplayingText = false;
 	}
-	if (PlayerCharacter.IsValid())
+	if (CurrentDialogOwner.IsValid())
 	{
-		PlayerCharacter->UnpauseMovement();
+		// We're done looking at the dialog, so make sure to let our character/pawn know
+		CurrentDialogOwner->DialogEnd();
 	}
 }
 
-void ACaravanPlayerController::AdvanceText()
+
+void ACaravanPlayerController::TryAdvanceText()
 {
 	if (bIsDisplayingText)
 	{

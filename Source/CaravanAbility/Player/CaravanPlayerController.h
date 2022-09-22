@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Blueprint/UserWidget.h" 
-#include "CaravanAbility/DialogWidget.h"
+#include "CaravanAbility/UI/DialogWidget.h"
 #include "CaravanAbility/Dialog/DialogInstance.h"
 #include "GameplayTagContainer.h" 
 
@@ -14,6 +14,8 @@
 /**
  * 
  */
+class ACharacterBase;
+
 UCLASS()
 class CARAVANABILITY_API ACaravanPlayerController : public APlayerController
 {
@@ -29,20 +31,17 @@ class CARAVANABILITY_API ACaravanPlayerController : public APlayerController
 	UDialogWidget* DialogDisplayWidget;
 
 public:
-	UFUNCTION(BlueprintCallable)
-	void ReceiveDialogInteraction(AActor* SourceNPC, FName DialogID);
+	void ReceiveDialog(FName Dialog, TWeakObjectPtr<ACharacterBase> CharacterReceiver);
 
 	UFUNCTION(BlueprintCallable)
 	void Interact();
 
 private:
 	void DisplayText(FText Text);
-
 	void HideText();
+	void TryAdvanceText();
 
-	void AdvanceText();
-
-	TWeakObjectPtr<class ACharacterBase> PlayerCharacter;
+	TWeakObjectPtr<ACharacterBase> PlayerCharacter;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UDialogWidget> DialogWidgetClass;
@@ -51,6 +50,7 @@ private:
 	UDataTable* DialogTable;
 
 	FDialogInstance* CurrentDialog;
+	TWeakObjectPtr<ACharacterBase> CurrentDialogOwner;
 
 	bool bIsDisplayingText = false;
 	
