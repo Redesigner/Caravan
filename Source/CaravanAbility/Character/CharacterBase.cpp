@@ -9,6 +9,7 @@
 #include "CaravanAbility/Character/Components/CharacterBaseMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "CaravanAbility/Character/Components/DecalFadeComponent.h" 
+#include "CaravanAbility/Dialog/DialogHandler.h"
 #include "CaravanAbility/GameplayAbilities/Components/CharacterAbilitySystemComponent.h"
 #include "CaravanAbility/GameplayAbilities/MeleeAbility.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -281,11 +282,20 @@ void ACharacterBase::HandleInteraction(FGameplayInteraction Interaction)
 	{
 		if (AActor* OwnerActor = GetOwner())
 		{
-			if (ACaravanPlayerController* CaravanController = Cast<ACaravanPlayerController>(OwnerActor))
+			if (UDialogHandler* DialogHandler = GetOwner()->FindComponentByClass<UDialogHandler>())
 			{
-				CaravanController->ReceiveDialog(Interaction.Payload, this);
+				DialogHandler->SetTargetCharacter(Interaction.Instigator);
+				DialogHandler->QueueDialog(Interaction.Payload);
 			}
 		}
+	}
+	else if (Interaction.InteractionType == EGameplayInteractionType::Respond)
+	{
+		if (FName* Reply = ResponseMap.Find(Interaction.Payload) )
+		{
+			Interaction.Instigator->HandleInteraction(FGameplayInteraction(this, *Reply, EGameplayInteractionType::ShowDialog));
+		}
+		return;
 	}
 	OnHandleInteraction(Interaction);
 }
@@ -303,6 +313,12 @@ void ACharacterBase::UnpauseMovement()
 	UnpauseMovementServer();
 	UnpauseMovementLocal();
 }
+
+void ACharacterBase::AddDialogResponse(FName Received, FName DialogId)
+{
+	ResponseMap.Add(Received, DialogId);
+}
+
 
 void ACharacterBase::PauseMovementLocal()
 {

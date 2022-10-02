@@ -114,6 +114,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, meta = (BlueprintProtected))
 	void OnDialogEnd();
 
+	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	void AddDialogResponse(FName Received, FName DialogId);
+
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void OnHandleInteraction(FGameplayInteraction Interaction);
 
@@ -127,6 +130,8 @@ private:
 	UFUNCTION(Server, Reliable)
 	void UnpauseMovementServer();
 	void UnpauseMovementLocal();
+
+	TMap<FName, FName> ResponseMap;
 
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Targeting, meta = (AllowPrivateAccess = "true"))

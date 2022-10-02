@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "CaravanAbility/UI/DialogOptionButton.h"
 #include "DialogWidget.generated.h"
 
 /**
@@ -14,19 +15,36 @@ class CARAVANABILITY_API UDialogWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-public:
 
+public:
 	UFUNCTION(BlueprintCallable)
 	void SetDialog(FString Text, bool bFadeIn = true);
 
 	UFUNCTION(BlueprintCallable)
+	void SetDialogWithOptions(FString Text, TArray<FString> Options, bool bFadeIn = true);
+
+	UFUNCTION(BlueprintCallable)
 	bool GetIsCompleted() const;
+
+	DECLARE_DELEGATE_OneParam(OptionClicked, FString);
+	OptionClicked OnOptionClicked;
 
 private:
 	void PrewrapText(FString& Text) const;
 
+	void ClearOptions();
+
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
-	class UTextBlock* TextBox;
+	class UTextBlock* TextBox = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	class UVerticalBox* OptionList = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UDialogOptionButton> OptionButtonClass;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
+	TArray<UDialogOptionButton*> OptionButtons;
 
 	FTimerHandle UpdateTimerHandle;
 

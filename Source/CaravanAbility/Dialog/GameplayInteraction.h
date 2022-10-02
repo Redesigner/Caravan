@@ -13,7 +13,8 @@ enum EGameplayInteractionType
 {
 	Talk			UMETA(DisplayName = "Talk"),
 	ShowDialog		UMETA(DisplayName = "Show Dialog"),
-	EndDialog		UMETA(DisplayName = "End Dialog")
+	EndDialog		UMETA(DisplayName = "End Dialog"),
+	Respond			UMETA(DisplayName = "Respond")
 };
 
 class ACharacterBase;

@@ -31,27 +31,19 @@ class CARAVANABILITY_API ACaravanPlayerController : public APlayerController
 	UDialogWidget* DialogDisplayWidget;
 
 public:
-	void ReceiveDialog(FName Dialog, TWeakObjectPtr<ACharacterBase> CharacterReceiver);
+	void ShowCursor();
+
+	void HideCursor();
 
 	UFUNCTION(BlueprintCallable)
 	void Interact();
 
 private:
-	void DisplayText(FText Text);
-	void HideText();
-	void TryAdvanceText();
-
 	TWeakObjectPtr<ACharacterBase> PlayerCharacter;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UDialogWidget> DialogWidgetClass;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Dialog, meta = (AllowPrivateAccess = "true"))
-	UDataTable* DialogTable;
-
-	FDialogInstance* CurrentDialog;
-	TWeakObjectPtr<ACharacterBase> CurrentDialogOwner;
-
-	bool bIsDisplayingText = false;
-	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
+	class UDialogHandler* DialogHandler;
 };

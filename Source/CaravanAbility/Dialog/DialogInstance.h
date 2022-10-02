@@ -22,7 +22,7 @@ struct CARAVANABILITY_API FDialogInstance : public FTableRowBase
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bCanRespond = false;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (EditCondition = bCanAdvance))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (EditCondition = bCanRespond))
 	TArray<FString> Responses;
 };
 

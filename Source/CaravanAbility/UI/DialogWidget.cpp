@@ -5,7 +5,8 @@
 
 #include "Fonts/FontMeasure.h"
 
-
+#include "Components/Button.h"
+#include "Components/VerticalBox.h"
 #include "Components/PanelWidget.h" 
 #include "Components/TextBlock.h" 
 
@@ -23,13 +24,13 @@ void UDialogWidget::SetDialog(FString Text, bool bFadeIn)
 	}
 	if (bFadeIn)
 	{
+		ClearOptions();
 		PrewrapText(Text);
 		DesiredText = Text;
 		DisplayedText = "";
 		TextBox->SetText(FText::FromString(DisplayedText));
 		CurrentIndex = 0;
 		bIsCompleted = false;
-
 		if (UWorld* World = GetWorld())
 		{
 			World->GetTimerManager().SetTimer(UpdateTimerHandle, [this]()
@@ -49,10 +50,27 @@ void UDialogWidget::SetDialog(FString Text, bool bFadeIn)
 	}
 }
 
+void UDialogWidget::SetDialogWithOptions(FString Text, TArray<FString> Options, bool bFadeIn)
+{
+	SetDialog(Text, bFadeIn);
+	for (FString& Option : Options)
+	{
+		if (!OptionButtonClass->StaticClass())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Tried to create buttons for dialog, but the widget class was null."));
+			return;
+		}
+		UDialogOptionButton* NewButton = CreateWidget<UDialogOptionButton>(this, OptionButtonClass);
+		OptionList->AddChildToVerticalBox(NewButton);
+		NewButton->SetText(Option);
+	}
+}
+
 bool UDialogWidget::GetIsCompleted() const
 {
 	return bIsCompleted;
 }
+
 
 void UDialogWidget::PrewrapText(FString& Text) const
 {
@@ -72,5 +90,16 @@ void UDialogWidget::PrewrapText(FString& Text) const
 			BreakLocation--;
 		}
 		Text[BreakLocation] = '\n';
+	}
+}
+
+void UDialogWidget::ClearOptions()
+{
+	if (OptionList->HasAnyChildren())
+	{
+		for (UWidget* Widget : OptionList->GetAllChildren())
+		{
+			OptionList->RemoveChild(Widget);
+		}
 	}
 }

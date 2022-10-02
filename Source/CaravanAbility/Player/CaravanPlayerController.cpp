@@ -4,25 +4,29 @@
 #include "CaravanPlayerController.h"
 
 #include "CaravanAbility\Character\CharacterBase.h"
+#include "CaravanAbility\Dialog\DialogHandler.h"
 
 #include "Components/Widget.h" 
 
 ACaravanPlayerController::ACaravanPlayerController()
 {
+	DialogHandler = CreateDefaultSubobject<UDialogHandler>(TEXT("Dialog Handler"));
 }
 
 void ACaravanPlayerController::BeginPlay()
 {
+	if (ACharacterBase* CharacterBase = Cast<ACharacterBase>(GetPawn()))
+	{
+		PlayerCharacter = CharacterBase;
+	}
+
 	if (DialogWidgetClass && IsLocalPlayerController() )
 	{
 		DialogDisplayWidget = CreateWidget<UDialogWidget>(this, DialogWidgetClass, TEXT("Dialog display"));
 		DialogDisplayWidget->AddToPlayerScreen();
-		HideText();
-	}
-
-	if (ACharacterBase* CharacterBase = Cast<ACharacterBase>(GetPawn()))
-	{
-		PlayerCharacter = CharacterBase;
+		DialogDisplayWidget->SetVisibility(ESlateVisibility::Hidden);
+		DialogHandler->AttachWidget(DialogDisplayWidget);
+		DialogHandler->SetOwningCharacter(PlayerCharacter.Get() );
 	}
 }
 
@@ -33,99 +37,35 @@ void ACaravanPlayerController::SetupInputComponent()
 	InputComponent->BindAction(TEXT("Interact"), EInputEvent::IE_Pressed, this, &ACaravanPlayerController::Interact);
 }
 
-void ACaravanPlayerController::ReceiveDialog(FName Dialog, TWeakObjectPtr<ACharacterBase> CharacterReceiver)
-{
-	if (bIsDisplayingText)
-	{
-		// Right now, displayed dialog cannot be overwritten. Maybe this will change?
-		return;
-	}
-	if (!DialogTable)
-	{
-		return;
-	}
-	FString ContextString;
-	CurrentDialog = DialogTable->FindRow<FDialogInstance>(Dialog, ContextString);
-	if (CurrentDialog)
-	{
-		if (CharacterReceiver.IsValid())
-		{
-			CurrentDialogOwner = CharacterReceiver;
-		}
-		DisplayText(FText::FromString(CurrentDialog->Text));
-	}
-}
 
 void ACaravanPlayerController::Interact()
 {
 	// Normally, we'll just forward this event to the character. Since
 	// the controller takes responsibility for displaying dialog on screen,
 	// it gets advanced here.
-	if (!bIsDisplayingText)
+	if (DialogHandler && DialogHandler->IsActive())
 	{
-		PlayerCharacter->Interact();
+		DialogHandler->AdvanceDialog();
 	}
 	else
 	{
-		TryAdvanceText();
-	}
-}
-
-void ACaravanPlayerController::DisplayText(FText Text)
-{
-	// This shouldn't be called by a non-local player controller, but we just want to make sure...
-	if (DialogDisplayWidget && IsLocalPlayerController())
-	{
-		DialogDisplayWidget->SetDialog(Text.ToString());
-		DialogDisplayWidget->SetIsEnabled(true);
-		DialogDisplayWidget->SetVisibility(ESlateVisibility::Visible);
-		bIsDisplayingText = true;
-	}
-	if (CurrentDialogOwner.IsValid())
-	{
-		CurrentDialogOwner->DialogStart();
-	}
-}
-
-void ACaravanPlayerController::HideText()
-{
-	if (DialogDisplayWidget && IsLocalPlayerController())
-	{
-		DialogDisplayWidget->SetIsEnabled(false);
-		DialogDisplayWidget->SetVisibility(ESlateVisibility::Hidden);
-		bIsDisplayingText = false;
-	}
-	if (CurrentDialogOwner.IsValid())
-	{
-		// We're done looking at the dialog, so make sure to let our character/pawn know
-		CurrentDialogOwner->DialogEnd();
+		PlayerCharacter->Interact();
 	}
 }
 
 
-void ACaravanPlayerController::TryAdvanceText()
+void ACaravanPlayerController::ShowCursor()
 {
-	if (bIsDisplayingText)
-	{
-		if (!DialogDisplayWidget->GetIsCompleted())
-		{
-			if (CurrentDialog)
-			{
-				DialogDisplayWidget->SetDialog(CurrentDialog->Text, false);
-			}
-		}
-		else if (CurrentDialog->bCanAdvance)
-		{
-			FString ContextString;
-			CurrentDialog = DialogTable->FindRow<FDialogInstance>(CurrentDialog->NextDialog, ContextString);
-			if (CurrentDialog)
-			{
-				DialogDisplayWidget->SetDialog(CurrentDialog->Text);
-			}
-		}
-		else
-		{
-			HideText();
-		}
-	}
+	SetShowMouseCursor(true);
+	int x, y;
+	GetViewportSize(x, y);
+	SetMouseLocation(x / 2, y - 100);
+	SetInputMode(FInputModeGameAndUI());
+}
+
+
+void ACaravanPlayerController::HideCursor()
+{
+	SetShowMouseCursor(false);
+	SetInputMode(FInputModeGameOnly());
 }
