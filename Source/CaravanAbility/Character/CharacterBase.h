@@ -4,26 +4,31 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "CaravanAbility/GameplayAbilities/CaravanGameplayAbility.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h" 
 #include "CharacterBaseAttributeSet.h"
 #include "GameplayCueInterface.h"
-#include "CaravanAbility/Dialog/GameplayInteraction.h"
 
 #include "Components/PrimitiveComponent.h"
 
+#include "CaravanAbility/Dialog/GameplayInteraction.h"
+
+#include "CaravanAbility/GameplayAbilities/CaravanGameplayAbility.h"
 #include "CaravanAbility/GameplayAbilities/Components/HitboxController.h"
 #include "CaravanAbility/GameplayAbilities/Actors/TargetingReticleActor.h"
+
+#include "CaravanAbility/Dialog/DialogResponseInterface.h"
+#include "CaravanAbility/Dialog/Tags/DialogTagHandle.h"
 
 #include "CharacterBase.generated.h"
 
 class USphereComponent;
 class UCharacterAbilitySystemComponent;
 UCLASS()
-class CARAVANABILITY_API ACharacterBase : public ACharacter, public IAbilitySystemInterface, public IGameplayCueInterface
+class CARAVANABILITY_API ACharacterBase : public ACharacter, public IAbilitySystemInterface, public IGameplayCueInterface, public IDialogResponseInterface
 {
 	GENERATED_BODY()
+	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Targeting, meta = (AllowPrivateAccess = "true"), Replicated)
 	ATargetingReticleActor* TargetingReticle;
@@ -69,6 +74,12 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
+	// Dialog Response Interface
+	virtual const TArray<FString>& GetResponses() const override;
+
+	virtual FDialogTagHandle* GetRootTag() override;
+	// End interface
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -120,6 +131,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void OnHandleInteraction(FGameplayInteraction Interaction);
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Dialog)
+	TArray<FString> DialogResponses;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Dialog)
+	FString NPCDialogId;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Dialog)
+	FDialogTagHandle RootTag;
 
 private:
 	
@@ -132,7 +151,6 @@ private:
 	void UnpauseMovementLocal();
 
 	TMap<FName, FName> ResponseMap;
-
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Targeting, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<ATargetingReticleActor> TargetingReticleClass;

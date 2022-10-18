@@ -17,6 +17,7 @@
 
 #include "Net/UnrealNetwork.h"
 
+
 // Sets default values
 ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer) :
 	ACharacter(ObjectInitializer.SetDefaultSubobjectClass(ACharacter::CharacterMovementComponentName, UCharacterBaseMovementComponent::StaticClass()))
@@ -48,6 +49,10 @@ ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer) :
 	InteractionVolume->SetupAttachment(RootComponent);
 
 	AttributeSet = CreateDefaultSubobject<UCharacterBaseAttributeSet>(TEXT("Character attribute set"));
+
+	// UFunction* NewFunc = NewObject<UFunction>(GetClass(), TEXT("TestFunction"), RF_Public );
+	// NewFunc->FunctionFlags = NewFunc->FunctionFlags | EFunctionFlags::FUNC_Event | EFunctionFlags::FUNC_BlueprintEvent | EFunctionFlags::FUNC_BlueprintCallable;
+	// FNativeFunctionRegistrar::RegisterFunction(GetClass(), TEXT("TestFunc"), NewFunc->GetNativeFunc());
 }
 
 // Called when the game starts or when spawned
@@ -127,6 +132,16 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ACharacterBase, TargetingReticle);
 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
+
+const TArray<FString>& ACharacterBase::GetResponses() const
+{
+	return DialogResponses;
+}
+
+FDialogTagHandle* ACharacterBase::GetRootTag()
+{
+	return &RootTag;
 }
 
 
