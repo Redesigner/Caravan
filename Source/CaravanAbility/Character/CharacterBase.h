@@ -131,6 +131,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void OnHandleInteraction(FGameplayInteraction Interaction);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnDeath(const FGameplayEffectSpec CauseOfDeath);
+
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Dialog)
 	TArray<FString> DialogResponses;
 

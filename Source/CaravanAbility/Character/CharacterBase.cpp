@@ -49,6 +49,7 @@ ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer) :
 	InteractionVolume->SetupAttachment(RootComponent);
 
 	AttributeSet = CreateDefaultSubobject<UCharacterBaseAttributeSet>(TEXT("Character attribute set"));
+	AttributeSet->OnDeath.BindUObject(this, &ACharacterBase::OnDeath);
 
 	// UFunction* NewFunc = NewObject<UFunction>(GetClass(), TEXT("TestFunction"), RF_Public );
 	// NewFunc->FunctionFlags = NewFunc->FunctionFlags | EFunctionFlags::FUNC_Event | EFunctionFlags::FUNC_BlueprintEvent | EFunctionFlags::FUNC_BlueprintCallable;

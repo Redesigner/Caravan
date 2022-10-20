@@ -9,6 +9,8 @@
 /**
  * 
  */
+struct FGameplayEffectSpec;
+
 UCLASS()
 class CARAVANABILITY_API UCharacterBaseAttributeSet : public UAttributeSet
 {
@@ -17,6 +19,8 @@ class CARAVANABILITY_API UCharacterBaseAttributeSet : public UAttributeSet
 	UCharacterBaseAttributeSet();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
 public:
 
@@ -28,4 +32,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Category = Health, ReplicatedUsing = OnRep_CurrentHealth)
 	FGameplayAttributeData CurrentHealth;
+
+	DECLARE_DELEGATE_OneParam(FOnDeath, const FGameplayEffectSpec)
+	FOnDeath OnDeath;
 };

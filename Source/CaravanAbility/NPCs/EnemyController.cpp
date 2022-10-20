@@ -3,8 +3,13 @@
 
 #include "EnemyController.h"
 
-#include "../Character/CharacterBase.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h" 
+
+#include "CaravanAbility/Character/CharacterBase.h"
+#include "CaravanAbility/GameplayAbilities/Components/CharacterAbilitySystemComponent.h"
+
+const float RotationSpeed = 180.0f;
 
 AEnemyController::AEnemyController()
 {
@@ -14,7 +19,29 @@ AEnemyController::AEnemyController()
 void AEnemyController::Tick(float DeltaTime)
 {
 	CurrentTarget = GetClosestTarget();
-	MoveToActor(CurrentTarget.Get(), 100.0f);
+	SetFocus(CurrentTarget.Get());
+	bool bIsClose = (MoveToActor(CurrentTarget.Get(), 100.0f) == EPathFollowingRequestResult::AlreadyAtGoal );
+	UpdateControlRotation(DeltaTime, true);
+
+	if (bIsClose && Character.IsValid())
+	{
+		// We are technically overriding the built-in rotation,
+		// so we need to make sure that the root motion is not running
+		if (!Character->GetMesh()->IsPlayingRootMotion() && MovementComponent->MovementMode == EMovementMode::MOVE_Walking)
+		{
+			const FRotator DesiredRotation = FRotator(0.0f, ControlRotation.Yaw, 0.0f);
+			const FRotator InterpRotation = FMath::RInterpConstantTo(Character->GetActorRotation(), DesiredRotation, DeltaTime, RotationSpeed);
+			Character->SetActorRotation(InterpRotation);
+		}
+		FVector DistanceToTarget = CurrentTarget->GetActorLocation() - Character->GetActorLocation();
+		DistanceToTarget.Normalize();
+		float AngleBetween = FMath::RadiansToDegrees(FMath::Acos(DistanceToTarget.Dot(Character->GetActorForwardVector())) );
+		if (AngleBetween <= 35.0f)
+		{
+			// Attempt to execute an attack
+			Character->GetAbilitySystemComponent()->TryActivateAbilitiesByTag(ValidAttackTagContainer);
+		}
+	}
 }
 
 
@@ -26,9 +53,24 @@ void AEnemyController::BeginPlay()
 	Super::BeginPlay();
 }
 
+void AEnemyController::OnPossess(APawn* PossessedPawn)
+{
+	// Update our weak references automatically, so we don't have to keep casting
+	if (ACharacterBase* PawnAsCharacter = Cast<ACharacterBase>(PossessedPawn))
+	{
+		Character = PawnAsCharacter;
+
+		if (UCharacterMovementComponent* CharacterMovementComponent = Cast<UCharacterMovementComponent>(Character->GetMovementComponent()))
+		{
+			MovementComponent = CharacterMovementComponent;
+		}
+	}
+	Super::OnPossess(PossessedPawn);
+}
+
+
 void AEnemyController::TargetSpawned(AActor* Target)
 {
-
 	if (IsTarget(Target))
 	{
 		PotentialTargets.Add(Target);
@@ -64,17 +106,21 @@ bool AEnemyController::IsTarget(AActor* Target) const
 	}
 	if (Target->IsA(ACharacter::StaticClass()))
 	{
-		return Target != GetPawn();
+		return Target != GetPawn() && IsValidTarget(Target);
 	}
 	return false;
 }
 
+bool AEnemyController::IsValidTarget_Implementation(AActor* Target) const
+{
+	return true;
+}
 
 TWeakObjectPtr<AActor> AEnemyController::GetClosestTarget() const
 {
-	if (APawn* ControlledPawn = GetPawn())
+	if (Character.IsValid())
 	{
-		const FVector CurrentLocation = ControlledPawn->GetActorLocation();
+		const FVector CurrentLocation = Character->GetActorLocation();
 		TArray<TWeakObjectPtr<AActor>> Targets = PotentialTargets;
 		if (Targets.IsEmpty())
 		{
