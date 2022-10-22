@@ -20,7 +20,7 @@ void AEnemyController::Tick(float DeltaTime)
 {
 	CurrentTarget = GetClosestTarget();
 	SetFocus(CurrentTarget.Get());
-	bool bIsClose = (MoveToActor(CurrentTarget.Get(), 100.0f) == EPathFollowingRequestResult::AlreadyAtGoal );
+	bool bIsClose = (MoveToActor(CurrentTarget.Get(), MinAttackDistance) == EPathFollowingRequestResult::AlreadyAtGoal );
 	UpdateControlRotation(DeltaTime, true);
 
 	if (bIsClose && Character.IsValid())
@@ -36,10 +36,17 @@ void AEnemyController::Tick(float DeltaTime)
 		FVector DistanceToTarget = CurrentTarget->GetActorLocation() - Character->GetActorLocation();
 		DistanceToTarget.Normalize();
 		float AngleBetween = FMath::RadiansToDegrees(FMath::Acos(DistanceToTarget.Dot(Character->GetActorForwardVector())) );
-		if (AngleBetween <= 35.0f)
+		if (!bInternalCooldown && AngleBetween <= AcceptableConeAngle)
 		{
 			// Attempt to execute an attack
-			Character->GetAbilitySystemComponent()->TryActivateAbilitiesByTag(ValidAttackTagContainer);
+			if (Character->GetAbilitySystemComponent()->TryActivateAbilitiesByTag(ValidAttackTagContainer))
+			{
+				// Set our internal cooldown, so the enemy isn't just spamming attacks as fast as a real player could
+				bInternalCooldown = true;
+				GetWorld()->GetTimerManager().SetTimer(InternalAttackCooldown,
+					FTimerDelegate::CreateUObject(this, &AEnemyController::EndInternalCooldown),
+					SuccessfulAttackCooldown, false);
+			}
 		}
 	}
 }
@@ -77,6 +84,11 @@ void AEnemyController::TargetSpawned(AActor* Target)
 	}
 }
 
+
+void AEnemyController::EndInternalCooldown()
+{
+	bInternalCooldown = false;
+}
 
 TArray<TWeakObjectPtr<AActor>> AEnemyController::GetTargets() const
 {

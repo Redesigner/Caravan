@@ -15,6 +15,7 @@ enum class EMeleeInputID : uint8
 {
 	Attack		UMETA(DisplayName = "Attack"),
 	Secondary	UMETA(DisplayName = "Secondary"),
+	Defend		UMETA(DisplayName = "Defend"),
 	None		UMETA(DisplayName = "None"),
 	Confirm		UMETA(DisplayName = "Confirm"),
 	Cancel		UMETA(DisplayName = "Cancel")

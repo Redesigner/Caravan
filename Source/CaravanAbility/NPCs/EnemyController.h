@@ -30,6 +30,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	bool IsValidTarget(AActor* Target) const;
 
+	UFUNCTION()
+	void EndInternalCooldown();
+
 protected:
 	TArray<TWeakObjectPtr<AActor>> GetTargets() const;
 	virtual bool IsTarget(AActor* Target) const;
@@ -47,4 +50,17 @@ private:
 	TWeakObjectPtr<class ACharacterBase> Character;
 
 	TWeakObjectPtr<class UCharacterMovementComponent> MovementComponent;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Category = Attacking)
+	float MinAttackDistance = 150.0f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Category = Attacking)
+	float AcceptableConeAngle = 35.0f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Category = Attacking)
+	float SuccessfulAttackCooldown = 2.0f;
+
+	FTimerHandle InternalAttackCooldown;
+
+	bool bInternalCooldown = false;
 };

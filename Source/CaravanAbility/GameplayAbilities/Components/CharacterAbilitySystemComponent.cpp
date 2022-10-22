@@ -6,7 +6,9 @@
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayCueManager.h"
+
 #include "CaravanAbility/GameplayAbilities/CaravanGameplayAbility.h"
+#include "CaravanAbility/GameplayAbilities/Components/HitboxController.h"
 #include "CaravanAbility/CaravanAbility.h"
 
 #include "Net/UnrealNetwork.h"
@@ -128,14 +130,35 @@ void UCharacterAbilitySystemComponent::NotifyAbilityEnded(FGameplayAbilitySpecHa
 	FGameplayTag NextAbility;
 	if (GetNextValidQueuedAbility(NextAbility))
 	{
-		if (TryActivateAbilitiesByTag(NextAbility.GetSingleTagContainer()))
+		TArray<FGameplayAbilitySpec*> MatchingAbilities;
+		GetActivatableGameplayAbilitySpecsByAllMatchingTags(NextAbility.GetSingleTagContainer(), MatchingAbilities);
+		if (MatchingAbilities.IsEmpty())
+		{
+			UE_LOG(LogAbilityQueue, Display, TEXT("[%s] No ability matching tag: '%s' is currently activatable."), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"), *NextAbility.ToString());
+			HitboxController->SetCurrentGameplayAbilitySpec(nullptr);
+			return;
+		}
+		// Right now, we just try to activate the *first* ability matching the tag.
+		// We only want to activate one ability of this type at a time, that's why we used a queue!
+		if (TryActivateAbility(MatchingAbilities[0]->Handle))
 		{
 			UE_LOG(LogAbilityQueue, Display, TEXT("[%s] Ability retrieved from queue: '%s'"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"), *NextAbility.ToString());
+			if (HitboxController.IsValid())
+			{
+				// Let our HitboxController (if we have one) know that our current *primary* ability is this new one.
+				// This is necessary for the hitboxes to respond back to our attack, etc.
+				HitboxController->SetCurrentGameplayAbilitySpec(MatchingAbilities[0]);
+				return;
+			}
 		}
 		else
 		{
 			UE_LOG(LogAbilityQueue, Display, TEXT("[%s] Ability '%s' retrieved from queue, but couldn't be activated"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"), *NextAbility.ToString());
 		}
+	}
+	else if (HitboxController.IsValid())
+	{
+		HitboxController->SetCurrentGameplayAbilitySpec(nullptr);
 	}
 }
 
@@ -156,4 +179,9 @@ void UCharacterAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
 	{
 		Super::AbilityLocalInputPressed(InputID);
 	}
+}
+
+void UCharacterAbilitySystemComponent::SetHitboxController(UHitboxController* Controller)
+{
+	HitboxController = Controller;
 }

@@ -17,6 +17,7 @@ void UAnimNotify_Hitbox::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequ
 	UActorComponent* HitboxControllerComponent = MeshComp->GetOwner()->GetComponentByClass(UHitboxController::StaticClass());
 	if (UHitboxController* HitboxController = Cast<UHitboxController>(HitboxControllerComponent))
 	{
+		// We need to somehow get the current ability from this context...
 		HitboxController->SpawnHitbox(HitboxName, HitboxRelativeLocation, HitboxDirection, HitboxRadius);
 	}
 }

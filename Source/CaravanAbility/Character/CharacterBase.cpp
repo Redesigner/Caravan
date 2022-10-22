@@ -39,11 +39,12 @@ ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer) :
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	AbilitySystem = CreateDefaultSubobject<UCharacterAbilitySystemComponent>(TEXT("CharacterAbility"));
-	// AbilitySystem->SetIsReplicated(true);
-
 	HitboxController = CreateDefaultSubobject<UHitboxController>(TEXT("Hitbox Controller"));
 	HitboxController->SetupAttachment(RootComponent);
+
+	AbilitySystem = CreateDefaultSubobject<UCharacterAbilitySystemComponent>(TEXT("CharacterAbility"));
+	AbilitySystem->SetHitboxController(HitboxController);
+	// AbilitySystem->SetIsReplicated(true);
 
 	InteractionVolume = CreateDefaultSubobject<USphereComponent>(TEXT("Interaction Volume"));
 	InteractionVolume->SetupAttachment(RootComponent);

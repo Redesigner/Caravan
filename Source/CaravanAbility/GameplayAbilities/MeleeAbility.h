@@ -59,6 +59,8 @@ class CARAVANABILITY_API UMeleeAbility : public UCaravanGameplayAbility
 	/// <param name="HitResult">Optional HitResult params to be used, i.e., location of the hit</param>
 	void ApplyGameplayCue(const FHitResult& HitResult);
 	
+	UFUNCTION()
+	void HitInterrupted(const FHitResult& HitResult);
 
 public:
 
@@ -80,4 +82,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Melee, DisplayName = "Tag to apply to self when hit landed")
 	FGameplayTag GameplayCueSelf;
+
+private:
+	class UAbilityTask_PlayMontageAndWait* MontageTask;
 };

@@ -10,6 +10,8 @@
 /**
  * 
  */
+class UHitboxController;
+
 UCLASS()
 class CARAVANABILITY_API UCharacterAbilitySystemComponent : public UAbilitySystemComponent
 {
@@ -37,6 +39,8 @@ public:
 	/// If there are no matching branches available for the current combo state, handle the input normally
 	/// </summary>
 	virtual void AbilityLocalInputPressed(int32 InputID) override;
+
+	void SetHitboxController(UHitboxController* Controller);
 	
 
 	// GameplayCue functions
@@ -99,5 +103,7 @@ private:
 	/// A name referring to the combo state, since they can't be replicated over the network
 	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Replicated, Category = Combo, ReplicatedUsing = SetComboStateFromName, Transient, meta = (AllowPrivateAccess = true))
 	FName ComboStateName;
+
+	TWeakObjectPtr<UHitboxController> HitboxController;
 
 };

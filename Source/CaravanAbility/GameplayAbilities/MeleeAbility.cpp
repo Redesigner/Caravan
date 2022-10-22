@@ -54,7 +54,7 @@ void UMeleeAbility::ExecuteAttack(const FGameplayAbilitySpecHandle Handle, const
 	}
 	if (InitialAttack)
 	{
-		UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("AnimationMontageTask"), MeleeAnimation, 1.0f, MontageSectionName, false);
+		MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("AnimationMontageTask"), MeleeAnimation, 1.0f, MontageSectionName, false);
 		// Make sure to call the end ability function at the end of the ability, or cooldowns etc. won't work
 		MontageTask->OnBlendOut.AddDynamic(this, &UMeleeAbility::EndAbilityManual);
 		// If the ability gets interrupted, manually call it as well.
@@ -70,6 +70,7 @@ void UMeleeAbility::ExecuteAttack(const FGameplayAbilitySpecHandle Handle, const
 			if (HasAuthority(&ActivationInfo))
 			{
 				HitboxController->HitDetectedDelegate.BindUObject(this, &UMeleeAbility::HitTarget);
+				HitboxController->HitInterruptedDelegate.BindUObject(this, &UMeleeAbility::HitInterrupted);
 			}
 			else
 			{
@@ -148,4 +149,11 @@ void UMeleeAbility::ApplyGameplayCue(const FHitResult& HitResult)
 			CharacterASC->ExecuteGameplayCue(GameplayCueSelf, GameplayCueParams);
 		}
 	}
+}
+
+void UMeleeAbility::HitInterrupted(const FHitResult& HitResult)
+{
+	MontageTask->EndTask();
+	MontageStop();
+	EndAbilityManual();
 }

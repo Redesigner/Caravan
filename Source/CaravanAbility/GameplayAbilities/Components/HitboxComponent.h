@@ -9,6 +9,8 @@
 /**
  * 
  */
+struct FGameplayAbilitySpec;
+
 UCLASS()
 class CARAVANABILITY_API UHitboxComponent : public USphereComponent
 {
@@ -18,4 +20,5 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	FVector Direction = FVector::Zero();
 	
+	const FGameplayAbilitySpec* OwningAbility;
 };
