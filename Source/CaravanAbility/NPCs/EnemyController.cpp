@@ -33,21 +33,7 @@ void AEnemyController::Tick(float DeltaTime)
 			const FRotator InterpRotation = FMath::RInterpConstantTo(Character->GetActorRotation(), DesiredRotation, DeltaTime, RotationSpeed);
 			Character->SetActorRotation(InterpRotation);
 		}
-		FVector DistanceToTarget = CurrentTarget->GetActorLocation() - Character->GetActorLocation();
-		DistanceToTarget.Normalize();
-		float AngleBetween = FMath::RadiansToDegrees(FMath::Acos(DistanceToTarget.Dot(Character->GetActorForwardVector())) );
-		if (!bInternalCooldown && AngleBetween <= AcceptableConeAngle)
-		{
-			// Attempt to execute an attack
-			if (Character->GetAbilitySystemComponent()->TryActivateAbilitiesByTag(ValidAttackTagContainer))
-			{
-				// Set our internal cooldown, so the enemy isn't just spamming attacks as fast as a real player could
-				bInternalCooldown = true;
-				GetWorld()->GetTimerManager().SetTimer(InternalAttackCooldown,
-					FTimerDelegate::CreateUObject(this, &AEnemyController::EndInternalCooldown),
-					SuccessfulAttackCooldown, false);
-			}
-		}
+		TryExecuteAnyAttack();
 	}
 }
 
@@ -71,6 +57,11 @@ void AEnemyController::OnPossess(APawn* PossessedPawn)
 		{
 			MovementComponent = CharacterMovementComponent;
 		}
+		if (UCharacterAbilitySystemComponent* CharacterAscIn = Cast<UCharacterAbilitySystemComponent>(Character->GetAbilitySystemComponent()))
+		{
+			CharacterAsc = CharacterAscIn;
+			CharacterAsc->OnComboStateChanged.AddUObject(this, &AEnemyController::HandleComboStateChanged);
+		}
 	}
 	Super::OnPossess(PossessedPawn);
 }
@@ -88,6 +79,66 @@ void AEnemyController::TargetSpawned(AActor* Target)
 void AEnemyController::EndInternalCooldown()
 {
 	bInternalCooldown = false;
+}
+
+void AEnemyController::TryExecuteAnyAttack()
+{
+	if (bInternalCooldown)
+	{
+		// return early so we don't try to calculate the distance and angle every tick
+		// this shouldn't be *too* expensive, but there really isn't a reason to calculate
+		// that often
+		return;
+	}
+	FVector DistanceToTarget = CurrentTarget->GetActorLocation() - Character->GetActorLocation();
+	DistanceToTarget.Normalize();
+	float AngleBetween = FMath::RadiansToDegrees(FMath::Acos(DistanceToTarget.Dot(Character->GetActorForwardVector())));
+	if (AngleBetween <= AcceptableConeAngle)
+	{
+		// Attempt to execute an attack
+		if (Character->GetAbilitySystemComponent()->TryActivateAbilitiesByTag(ValidAttackTagContainer))
+		{
+			// Set our internal cooldown, so the enemy isn't just spamming attacks as fast as a real player could
+			bInternalCooldown = true;
+			GetWorld()->GetTimerManager().SetTimer(InternalAttackCooldown,
+				FTimerDelegate::CreateUObject(this, &AEnemyController::EndInternalCooldown),
+				SuccessfulAttackCooldown, false);
+		}
+	}
+}
+
+void AEnemyController::HandleComboStateChanged(const FComboState& NewComboState)
+{
+	if (NewComboState != FComboState::None())
+	{
+		// 50% chance of not doing a follow up
+		if (FMath::RandHelper(2) == 0)
+		{
+			return;
+		}
+		if (CharacterAsc.IsValid())
+		{
+			FGameplayTag FollowUpAbilityTag;
+			int32 InputId = static_cast<int32>(EMeleeInputID::Attack);
+			if (NewComboState.GetGameplayTagFromInput(InputId, FollowUpAbilityTag))
+			{
+				CharacterAsc->QueueAbility(FollowUpAbilityTag);
+				GetWorld()->GetTimerManager().SetTimer(InternalAttackCooldown,
+					FTimerDelegate::CreateUObject(this, &AEnemyController::EndInternalCooldown),
+					SuccessfulAttackCooldown, false);
+				return;
+			}
+			InputId = static_cast<int32>(EMeleeInputID::Secondary);
+			if (NewComboState.GetGameplayTagFromInput(InputId, FollowUpAbilityTag))
+			{
+				CharacterAsc->QueueAbility(FollowUpAbilityTag);
+				GetWorld()->GetTimerManager().SetTimer(InternalAttackCooldown,
+					FTimerDelegate::CreateUObject(this, &AEnemyController::EndInternalCooldown),
+					SuccessfulAttackCooldown, false);
+				return;
+			}
+		}
+	}
 }
 
 TArray<TWeakObjectPtr<AActor>> AEnemyController::GetTargets() const

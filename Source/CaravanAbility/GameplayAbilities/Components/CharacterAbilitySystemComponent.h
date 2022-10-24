@@ -23,21 +23,15 @@ public:
 	// VIRTUAL FUNCTIONS
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	/// <summary>
 	/// Override to output GameplayEffect information to the log
-	/// </summary>
 	virtual bool RemoveActiveGameplayEffect(FActiveGameplayEffectHandle Handle, int32 StacksToRemove) override;
 
-	/// <summary>
 	/// Checks the Ability Queue and attempts to play any abilities *before* calling the default NotifyAbilityEnded logic
-	/// </summary>
 	virtual void NotifyAbilityEnded(FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, bool bWasCancelled) override;
 
-	/// <summary>
 	/// Handle the local input for the ability. Will first check if there is a corresponding ability in the current combo state
 	/// If the ASC has an ability currently active, will add the Ability Tag to the queue
 	/// If there are no matching branches available for the current combo state, handle the input normally
-	/// </summary>
 	virtual void AbilityLocalInputPressed(int32 InputID) override;
 
 	void SetHitboxController(UHitboxController* Controller);
@@ -53,16 +47,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = GameplayCue)
 	void RemoveGameplayCueLocal(const FGameplayTag GameplayCueTag, const FGameplayCueParameters& GameplayCueParameters);
 
-
 	// Combo and Queue functions
 	void QueueAbility(const FGameplayTag& AbilityTag);
 
-	/// <summary>
+	void ClearAbilityQueue();
+
 	/// Attempt to set the ComboState by name. Currently checks the local ComboStates array for the FComboState with the corresponding name
-	/// </summary>
 	/// <param name="NewComboState">The name of the next combo state</param>
 	void SetNextComboAbility(FName NewComboState);
 
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnComboStateChanged, const FComboState&)
+	FOnComboStateChanged OnComboStateChanged;
 
 
 // PROPERTIES

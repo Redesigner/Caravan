@@ -65,6 +65,11 @@ void UCharacterAbilitySystemComponent::QueueAbility(const FGameplayTag& AbilityT
 	QueuedAbilities.Enqueue(TPair<float, FGameplayTag>(GetWorld()->TimeSeconds, AbilityTag));
 }
 
+void UCharacterAbilitySystemComponent::ClearAbilityQueue()
+{
+	QueuedAbilities.Empty();
+}
+
 
 void UCharacterAbilitySystemComponent::SetNextComboAbility(FName NewComboState)
 {
@@ -80,6 +85,7 @@ void UCharacterAbilitySystemComponent::SetComboStateFromName(FName Name)
 		if (ComboState.Name == Name)
 		{
 			CurrentComboState = ComboState;
+			OnComboStateChanged.Broadcast(ComboState);
 			return;
 		}
 	}

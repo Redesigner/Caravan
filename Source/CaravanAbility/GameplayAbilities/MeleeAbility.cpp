@@ -70,7 +70,7 @@ void UMeleeAbility::ExecuteAttack(const FGameplayAbilitySpecHandle Handle, const
 			if (HasAuthority(&ActivationInfo))
 			{
 				HitboxController->HitDetectedDelegate.BindUObject(this, &UMeleeAbility::HitTarget);
-				HitboxController->HitInterruptedDelegate.BindUObject(this, &UMeleeAbility::HitInterrupted);
+				HitboxController->HitInterruptedDelegate.BindUObject(this, &UMeleeAbility::HitInterrupted_Internal);
 			}
 			else
 			{
@@ -151,9 +151,25 @@ void UMeleeAbility::ApplyGameplayCue(const FHitResult& HitResult)
 	}
 }
 
-void UMeleeAbility::HitInterrupted(const FHitResult& HitResult)
+void UMeleeAbility::HitInterrupted_Internal(const FHitResult& HitResult)
 {
 	MontageTask->EndTask();
 	MontageStop();
+	if (InterruptEffect)
+	{
+		FGameplayEffectSpecHandle EffectHandle = MakeOutgoingGameplayEffectSpec(InterruptEffect);
+		FGameplayAbilityActorInfo ActorInfo = GetActorInfo();
+		ApplyGameplayEffectSpecToOwner(GetCurrentAbilitySpecHandle(), &ActorInfo, CurrentActivationInfo, EffectHandle);
+	}
+
+	if (UCharacterAbilitySystemComponent* CharacterASC = Cast<UCharacterAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo()))
+	{
+		// Execute the effect here, so it's only applied once
+		CharacterASC->ExecuteGameplayCue(GameplayCueSelfInterrupt);
+		// For now, this will clear the ability queue... breaking any combos
+		CharacterASC->ClearAbilityQueue();
+	}
+
 	EndAbilityManual();
+	HitInterrupted(HitResult);
 }

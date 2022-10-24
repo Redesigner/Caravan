@@ -23,3 +23,14 @@ bool FComboState::GetGameplayTagFromInput(int32 InputID, FGameplayTag& OutGamepl
     UE_LOG(LogAbilityCombos, Display, TEXT("Player pressed input '%i', but there was no ability associated with that input for the current combo state."), InputID)
     return false;
 }
+
+bool operator==(const FComboState& A, const FComboState& B)
+{
+    return A.Name == B.Name && &A.InputBranches == &B.InputBranches;
+}
+
+bool operator!=(const FComboState& A, const FComboState& B)
+{
+    return (A.Name != B.Name) ||
+        (&A.InputBranches != &B.InputBranches);
+}

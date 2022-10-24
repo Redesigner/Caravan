@@ -60,9 +60,12 @@ class CARAVANABILITY_API UMeleeAbility : public UCaravanGameplayAbility
 	void ApplyGameplayCue(const FHitResult& HitResult);
 	
 	UFUNCTION()
-	void HitInterrupted(const FHitResult& HitResult);
+	void HitInterrupted_Internal(const FHitResult& HitResult);
+
 
 public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void HitInterrupted(const FHitResult& HitResult);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnTargetHit(const FHitResult& HitResult);
@@ -70,6 +73,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Melee)
 	TSubclassOf<UGameplayEffect> HitEffect;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Melee)
+	TSubclassOf<UGameplayEffect> InterruptEffect;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Animation)
 	UAnimMontage* MeleeAnimation;
@@ -82,6 +88,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Melee, DisplayName = "Tag to apply to self when hit landed")
 	FGameplayTag GameplayCueSelf;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Melee, DisplayName = "Tag to apply to self when hit interrupted")
+	FGameplayTag GameplayCueSelfInterrupt;
 
 private:
 	class UAbilityTask_PlayMontageAndWait* MontageTask;

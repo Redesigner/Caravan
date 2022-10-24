@@ -30,3 +30,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Combo)
 	TMap<int32, FGameplayTag> InputBranches;
 };
+
+bool operator==(const FComboState& A, const FComboState& B);
+
+bool operator!=(const FComboState& A, const FComboState& B);
