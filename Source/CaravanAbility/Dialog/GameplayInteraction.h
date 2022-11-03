@@ -11,13 +11,25 @@
 UENUM(BlueprintType)
 enum EGameplayInteractionType
 {
+	None			UMETA(DisplayName = "None"),
+
+	// Request dialog if possible
 	Talk			UMETA(DisplayName = "Talk"),
+
+	// Display a piece of dialog on the screen
 	ShowDialog		UMETA(DisplayName = "Show Dialog"),
+
+	// Close dialog if possible
 	EndDialog		UMETA(DisplayName = "End Dialog"),
-	Respond			UMETA(DisplayName = "Respond")
+
+	// Respond to a piece of dialog with options. Should include a payload of our response
+	Respond			UMETA(DisplayName = "Respond"),
+
+	// Give an item to the entity that requested this interaction.
+	Give			UMETA(DisplayName = "Give")
 };
 
-class ACharacterBase;
+class IInteractableInterface;
 
 USTRUCT(BlueprintType)
 struct FGameplayInteraction
@@ -25,11 +37,13 @@ struct FGameplayInteraction
 	GENERATED_BODY()
 
 	FGameplayInteraction();
-	FGameplayInteraction(ACharacterBase* Instigator, FName Payload, EGameplayInteractionType InteractionType);
-	FGameplayInteraction(ACharacterBase* Instigator, EGameplayInteractionType InteractionType);
+	FGameplayInteraction(TScriptInterface<IInteractableInterface> Instigator, FName Payload, EGameplayInteractionType InteractionType);
+	FGameplayInteraction(TScriptInterface<IInteractableInterface>Instigator, EGameplayInteractionType InteractionType);
+
+	static FGameplayInteraction None();
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	ACharacterBase* Instigator;
+	TScriptInterface<IInteractableInterface> Instigator;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FName Payload;

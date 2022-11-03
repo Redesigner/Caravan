@@ -169,7 +169,9 @@ bool AEnemyController::IsTarget(AActor* Target) const
 	}
 	if (Target->IsA(ACharacter::StaticClass()))
 	{
-		return Target != GetPawn() && IsValidTarget(Target);
+		// Just some simple control -- do the checks in order of complexity, from least to greatest
+		if (Target == GetPawn()) { return false; }
+		return IsValidTarget(Target);
 	}
 	return false;
 }
@@ -189,12 +191,23 @@ TWeakObjectPtr<AActor> AEnemyController::GetClosestTarget() const
 		{
 			return nullptr;
 		}
-		TWeakObjectPtr<AActor> ClosestTarget = Targets[0];
-		float MinDist = FVector::DistSquared(ClosestTarget->GetActorLocation(), CurrentLocation);
+		bool bFoundTarget = false;
+		TWeakObjectPtr<AActor> ClosestTarget = nullptr;
+		float MinDist = 0.0f;
+
+		const float MaxViewDistSquared = MaxViewDistance * MaxViewDistance;
 		for (TWeakObjectPtr<AActor> Target : Targets)
 		{
 			const float CurrentDist = FVector::DistSquared(Target->GetActorLocation(), CurrentLocation);
-			if (CurrentDist < MinDist)
+			if (!bFoundTarget)
+			{
+				if (CurrentDist < MaxViewDistSquared)
+				{
+					MinDist = CurrentDist;
+					ClosestTarget = Target;
+				}
+			}
+			else if (CurrentDist < MinDist && CurrentDist <= MaxViewDistSquared)
 			{
 				MinDist = CurrentDist;
 				ClosestTarget = Target;

@@ -117,6 +117,10 @@ void ACharacterBase::PossessedBy(AController* NewController)
 		TargetingReticle->SetOwner(GetController());
 		TargetingReticle->SetAutonomousProxy(true);
 	}
+	if (UDialogHandler* DialogHandlerRef = NewController->FindComponentByClass<UDialogHandler>())
+	{
+		DialogHandler = DialogHandlerRef;
+	}
 }
 
 
@@ -274,9 +278,11 @@ void ACharacterBase::Interact()
 	InteractionVolume->GetOverlappingActors(OverlappingActors);
 	for (AActor* Target : OverlappingActors)
 	{
-		if (ACharacterBase* Character = Cast<ACharacterBase>(Target))
+		if (Target->Implements<UInteractableInterface>())
 		{
-			Character->OnHandleInteraction(FGameplayInteraction(this, EGameplayInteractionType::Talk) );
+			IInteractableInterface* Interactable = Cast<IInteractableInterface>(Target);
+			const FGameplayInteraction& InteractionResult = Interactable->HandleInteraction(FGameplayInteraction::None());
+			HandleInteraction(InteractionResult);
 		}
 	}
 }
@@ -293,28 +299,38 @@ void ACharacterBase::DialogEnd()
 	OnDialogEnd();
 }
 
-void ACharacterBase::HandleInteraction(FGameplayInteraction Interaction)
+FGameplayInteraction ACharacterBase::HandleInteraction(const FGameplayInteraction& Interaction)
 {
 	if (Interaction.InteractionType == EGameplayInteractionType::ShowDialog)
 	{
-		if (AActor* OwnerActor = GetOwner())
+		if (DialogHandler.IsValid())
 		{
-			if (UDialogHandler* DialogHandler = GetOwner()->FindComponentByClass<UDialogHandler>())
-			{
-				DialogHandler->SetTargetCharacter(Interaction.Instigator);
-				DialogHandler->QueueDialog(Interaction.Payload);
-			}
+			// Let our dialog handler know who to send dialog responses to, if it needs to
+			DialogHandler->SetTarget(Interaction.Instigator);
+			DialogHandler->QueueDialog(Interaction.Payload);
+			// We don't have an interaction to send... yet...
+			// If we want to respond to a text option, we will do that later
+			return FGameplayInteraction::None();
 		}
 	}
 	else if (Interaction.InteractionType == EGameplayInteractionType::Respond)
 	{
 		if (FName* Reply = ResponseMap.Find(Interaction.Payload) )
 		{
-			Interaction.Instigator->HandleInteraction(FGameplayInteraction(this, *Reply, EGameplayInteractionType::ShowDialog));
+			FGameplayInteraction ResponseInteraction = FGameplayInteraction(this, *Reply, EGameplayInteractionType::ShowDialog);
+			return ResponseInteraction;
 		}
-		return;
 	}
-	OnHandleInteraction(Interaction);
+	else if (Interaction.InteractionType == EGameplayInteractionType::None)
+	{
+		return OnHandleInteraction(Interaction);
+	}
+	return FGameplayInteraction::None();
+}
+
+FGameplayInteraction ACharacterBase::OnHandleInteraction_Implementation(FGameplayInteraction Interaction)
+{
+	return FGameplayInteraction::None();
 }
 
 

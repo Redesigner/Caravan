@@ -72,6 +72,9 @@ private:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Category = Attacking)
 	float SuccessfulAttackCooldown = 2.0f;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Category = Targeting)
+	float MaxViewDistance = 250.0f;
+
 	FTimerHandle InternalAttackCooldown;
 
 	bool bInternalCooldown = false;

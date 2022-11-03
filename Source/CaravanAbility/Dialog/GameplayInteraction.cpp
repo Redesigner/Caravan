@@ -2,7 +2,9 @@
 
 
 #include "GameplayInteraction.h"
+
 #include "CaravanAbility/Character/CharacterBase.h"
+#include "CaravanAbility/Static/InteractableInterface.h"
 
 
 FGameplayInteraction::FGameplayInteraction()
@@ -10,12 +12,17 @@ FGameplayInteraction::FGameplayInteraction()
 {
 }
 
-FGameplayInteraction::FGameplayInteraction(ACharacterBase* Instigator, FName Payload, EGameplayInteractionType InteractionType)
+FGameplayInteraction::FGameplayInteraction(TScriptInterface<IInteractableInterface> Instigator, FName Payload, EGameplayInteractionType InteractionType)
 	:Instigator(Instigator), Payload(Payload), InteractionType(InteractionType)
 {
 }
 
-FGameplayInteraction::FGameplayInteraction(ACharacterBase* Instigator, EGameplayInteractionType InteractionType)
+FGameplayInteraction::FGameplayInteraction(TScriptInterface<IInteractableInterface> Instigator, EGameplayInteractionType InteractionType)
 	:Instigator(Instigator), Payload(TEXT("None")), InteractionType(InteractionType)
 {
+}
+
+FGameplayInteraction FGameplayInteraction::None()
+{
+	return FGameplayInteraction(nullptr, EGameplayInteractionType::None);
 }

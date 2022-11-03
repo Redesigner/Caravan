@@ -12,24 +12,29 @@
 #include "Components/PrimitiveComponent.h"
 
 #include "CaravanAbility/Dialog/GameplayInteraction.h"
+#include "CaravanAbility/Dialog/DialogResponseInterface.h"
+#include "CaravanAbility/Dialog/Tags/DialogTagHandle.h"
 
 #include "CaravanAbility/GameplayAbilities/CaravanGameplayAbility.h"
 #include "CaravanAbility/GameplayAbilities/Components/HitboxController.h"
 #include "CaravanAbility/GameplayAbilities/Actors/TargetingReticleActor.h"
 
-#include "CaravanAbility/Dialog/DialogResponseInterface.h"
-#include "CaravanAbility/Dialog/Tags/DialogTagHandle.h"
+#include "CaravanAbility/Static/InteractableInterface.h"
+
+
 
 #include "CharacterBase.generated.h"
 
 class USphereComponent;
 class UCharacterAbilitySystemComponent;
 UCLASS()
-class CARAVANABILITY_API ACharacterBase : public ACharacter, public IAbilitySystemInterface, public IGameplayCueInterface, public IDialogResponseInterface
+class CARAVANABILITY_API ACharacterBase : public ACharacter,
+	public IAbilitySystemInterface, public IGameplayCueInterface,
+	public IDialogResponseInterface, public IInteractableInterface
 {
 	GENERATED_BODY()
 	
-
+	// ============================== MEMBER COMPONENTS =======================================
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Targeting, meta = (AllowPrivateAccess = "true"), Replicated)
 	ATargetingReticleActor* TargetingReticle;
 
@@ -51,22 +56,21 @@ class CARAVANABILITY_API ACharacterBase : public ACharacter, public IAbilitySyst
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attributes, meta = (AllowPrivateAccess = "true"))
 	UPrimitiveComponent* InteractionVolume;
+	// ============================== END MEMBER COMPONENTS =======================================
+
 
 public:
 	// Sets default values for this character's properties
 	ACharacterBase(const FObjectInitializer& ObjectInitializer);
 
 protected:
-	// Called when the game starts or when spawned
+	// ============================== Actor/Component overrides ==============================
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
+public:
 	virtual void Tick(float DeltaTime) override;
 
-	/// <summary>
 	/// Bind inputs for movement and GameplayAbilities
-	/// </summary>
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void PossessedBy(AController* NewController) override;
@@ -75,18 +79,22 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
-	// Dialog Response Interface
-	virtual const TArray<FString>& GetResponses() const override;
-
-	virtual FDialogTagHandle* GetRootTag() override;
-	// End interface
-
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	// ============================== End default overrides ==============================
+
 
 	UFUNCTION(BlueprintCallable)
 	UCharacterBaseAttributeSet* GetAttributeSetBase() const;
-	
+
+	// Initialize the GameplayAbilities from the DefaultAbilities Array
 	void GrantAbilities();
+
+
+	// ============================== Dialog Response Interface ==============================
+	virtual const TArray<FString>& GetResponses() const override;
+
+	virtual FDialogTagHandle* GetRootTag() override;
+	// ============================== End interface ==============================
 
 
 	// Targeting reticle functions. Should these be moved somewhere else?
@@ -96,7 +104,7 @@ public:
 
 	const FVector HideTargetingReticle();
 
-	// Movement functions and UFUNCTION bindings.
+	// ============================== Movement functions and UFUNCTION bindings. ==============================
 	// UFUNCTION bindings are necessary for these abilities to be called by the default AI controller
 	UFUNCTION()
 	void MoveForward(float Scale);
@@ -107,6 +115,7 @@ public:
 	void LookUp(float Scale);
 	UFUNCTION()
 	void LookRight(float Scale);
+	// ============================== End movement UFUNCTIONS ==============================
 
 	void PauseMovement();
 	void UnpauseMovement();
@@ -115,8 +124,9 @@ public:
 
 	void DialogStart();
 	void DialogEnd();
+
 	UFUNCTION(BlueprintCallable)
-	void HandleInteraction(FGameplayInteraction Interaction);
+	virtual FGameplayInteraction HandleInteraction(const FGameplayInteraction& Interaction) override;
 
 	// Called after the internal dialog handling is done.
 	// You should apply/remove necessary GameplayEffects here
@@ -128,11 +138,13 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	void AddDialogResponse(FName Received, FName DialogId);
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void OnHandleInteraction(FGameplayInteraction Interaction);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	FGameplayInteraction OnHandleInteraction(FGameplayInteraction Interaction);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDeath(const FGameplayEffectSpec CauseOfDeath);
+
+
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = Dialog)
 	TArray<FString> DialogResponses;
@@ -163,4 +175,6 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Abilities, meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<UCaravanGameplayAbility>> DefaultAbilities;
+
+	TWeakObjectPtr<class UDialogHandler> DialogHandler;
 };

@@ -35,10 +35,14 @@ void UDialogHandler::QueueDialog(FName DialogId)
 void UDialogHandler::Respond(FString& Response)
 {
 	UE_LOG(LogTemp, Display, TEXT("Player clicked dialog option :'%s'"), *Response)
-	if (Target.IsValid() && CharacterOwner.IsValid())
+	if (Target.GetObject() && CharacterOwner.IsValid())
 	{
-		UE_LOG(LogTemp, Display, TEXT("Sending Response to '%s'"), *Target->GetName())
-		Target->HandleInteraction(FGameplayInteraction(CharacterOwner.Get(), FName(Response), EGameplayInteractionType::Respond));
+		UE_LOG(LogTemp, Display, TEXT("Sending Response to '%s'"), *Target.GetObject()->GetName())
+		const FGameplayInteraction& ResponseResult = Target->HandleInteraction(FGameplayInteraction(CharacterOwner.Get(), FName(Response), EGameplayInteractionType::Respond));
+		if (ResponseResult.InteractionType == EGameplayInteractionType::ShowDialog)
+		{
+			QueueDialog(ResponseResult.Payload);
+		}
 	}
 }
 
@@ -130,7 +134,7 @@ void UDialogHandler::SetOwningCharacter(ACharacterBase* Character)
 	CharacterOwner = Character;
 }
 
-void UDialogHandler::SetTargetCharacter(ACharacterBase* Character)
+void UDialogHandler::SetTarget(TScriptInterface<IInteractableInterface> Character)
 {
 	Target = Character;
 }

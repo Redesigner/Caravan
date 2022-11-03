@@ -10,6 +10,7 @@
 #include "DialogHandler.generated.h"
 
 class ACharacterBase;
+class IInteractableInterface;
 
 UCLASS()
 class CARAVANABILITY_API UDialogHandler : public UActorComponent
@@ -22,7 +23,7 @@ public:
 	void SetDialogTable(UDataTable* Table);
 	void AttachWidget(UDialogWidget* Widget);
 	void SetOwningCharacter(ACharacterBase* Character);
-	void SetTargetCharacter(ACharacterBase* Character);
+	void SetTarget(TScriptInterface<IInteractableInterface> Character);
 
 	bool IsActive() const;
 
@@ -44,7 +45,7 @@ private:
 
 	// TODO: Use a custom container so that Dialog Instances can be stored as reference?
 	TQueue<FDialogInstance> DialogQueue;
-	TWeakObjectPtr<ACharacterBase> Target;
+	TScriptInterface<IInteractableInterface> Target;
 	TWeakObjectPtr<ACharacterBase> CharacterOwner;
 
 	UPROPERTY()
