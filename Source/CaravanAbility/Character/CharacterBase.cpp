@@ -6,12 +6,15 @@
 #include "CaravanAbility/CaravanAbility.h"
 #include "CaravanAbility/Player/CaravanPlayerController.h"
 
-#include "CaravanAbility/Character/Components/CharacterBaseMovementComponent.h"
 #include "Camera/CameraComponent.h"
+
+#include "CaravanAbility/Character/Components/CharacterBaseMovementComponent.h"
 #include "CaravanAbility/Character/Components/DecalFadeComponent.h" 
 #include "CaravanAbility/Dialog/DialogHandler.h"
 #include "CaravanAbility/GameplayAbilities/Components/CharacterAbilitySystemComponent.h"
 #include "CaravanAbility/GameplayAbilities/MeleeAbility.h"
+#include "CaravanAbility/Inventory/InventoryContainer.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -120,6 +123,10 @@ void ACharacterBase::PossessedBy(AController* NewController)
 	if (UDialogHandler* DialogHandlerRef = NewController->FindComponentByClass<UDialogHandler>())
 	{
 		DialogHandler = DialogHandlerRef;
+	}
+	if (UActorComponent* Inventory = NewController->GetComponentByClass(UInventoryContainer::StaticClass()))
+	{
+		InventoryContainer = Cast<UInventoryContainer>(Inventory);
 	}
 }
 
@@ -321,11 +328,17 @@ FGameplayInteraction ACharacterBase::HandleInteraction(const FGameplayInteractio
 			return ResponseInteraction;
 		}
 	}
-	else if (Interaction.InteractionType == EGameplayInteractionType::None)
+	else if (Interaction.InteractionType == EGameplayInteractionType::Give)
 	{
-		return OnHandleInteraction(Interaction);
+		if (InventoryContainer.IsValid())
+		{
+			InventoryContainer->GiveItem(FInventoryEntry::Empty());
+		}
 	}
-	return FGameplayInteraction::None();
+
+	// We handled two default cases: ShowDialog and Respond are special for the character.
+	// The rest can be customized in blueprint
+	return OnHandleInteraction(Interaction);
 }
 
 FGameplayInteraction ACharacterBase::OnHandleInteraction_Implementation(FGameplayInteraction Interaction)

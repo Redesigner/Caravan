@@ -5,12 +5,15 @@
 
 #include "CaravanAbility\Character\CharacterBase.h"
 #include "CaravanAbility\Dialog\DialogHandler.h"
+#include "CaravanAbility\Inventory\InventoryContainer.h"
 
-#include "Components/Widget.h" 
+#include "Components/Widget.h"
+#include "CaravanAbility\UI\InventoryUserWidget.h"
 
 ACaravanPlayerController::ACaravanPlayerController()
 {
 	DialogHandler = CreateDefaultSubobject<UDialogHandler>(TEXT("Dialog Handler"));
+	InventoryContainer = CreateDefaultSubobject<UInventoryContainer>(TEXT("Inventory Container"));
 }
 
 void ACaravanPlayerController::BeginPlay()
@@ -27,6 +30,13 @@ void ACaravanPlayerController::BeginPlay()
 		DialogDisplayWidget->SetVisibility(ESlateVisibility::Hidden);
 		DialogHandler->AttachWidget(DialogDisplayWidget);
 		DialogHandler->SetOwningCharacter(PlayerCharacter.Get() );
+	}
+
+	if (InventoryWidgetClass && IsLocalPlayerController())
+	{
+		InventoryWidget = CreateWidget<UInventoryUserWidget>(this, InventoryWidgetClass, TEXT("Inventory Widget"));
+		InventoryWidget->AddToPlayerScreen();
+		// InventoryWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 }
 

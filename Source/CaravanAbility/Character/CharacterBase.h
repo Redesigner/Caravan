@@ -177,4 +177,5 @@ private:
 	TArray<TSubclassOf<UCaravanGameplayAbility>> DefaultAbilities;
 
 	TWeakObjectPtr<class UDialogHandler> DialogHandler;
+	TWeakObjectPtr<class UInventoryContainer> InventoryContainer;
 };

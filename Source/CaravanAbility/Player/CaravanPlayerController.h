@@ -15,6 +15,7 @@
  * 
  */
 class ACharacterBase;
+class UInventoryUserWidget;
 
 UCLASS()
 class CARAVANABILITY_API ACaravanPlayerController : public APlayerController
@@ -29,6 +30,9 @@ class CARAVANABILITY_API ACaravanPlayerController : public APlayerController
 
 	UPROPERTY()
 	UDialogWidget* DialogDisplayWidget;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
+	UInventoryUserWidget* InventoryWidget;
 
 public:
 	void ShowCursor();
@@ -45,5 +49,11 @@ private:
 	TSubclassOf<UDialogWidget> DialogWidgetClass;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UInventoryUserWidget> InventoryWidgetClass;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
 	class UDialogHandler* DialogHandler;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
+	class UInventoryContainer* InventoryContainer;
 };

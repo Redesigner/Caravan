@@ -14,7 +14,9 @@
 				"AIModule",
 				"UMG",
 				"CoreUObject",
-				"BlueprintGraph"
+				"BlueprintGraph",
+				"Slate",
+				"SlateCore"
 			]
 		},
 		{
