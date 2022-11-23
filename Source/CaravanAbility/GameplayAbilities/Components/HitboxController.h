@@ -18,9 +18,9 @@ public:
 	virtual void BeginPlay() override;
 	
 	// ===== Hitbox manipulation functions =====
-	TWeakObjectPtr<UHitboxComponent> GetHitboxByName(FName Name);
+	TWeakObjectPtr<UArmorComponent> GetHitboxByName(FName Name);
 
-	TWeakObjectPtr<UHitboxComponent> SpawnHitbox(FName Name, FVector HitboxRelativeLocation, FVector Direction, float Radius);
+	TWeakObjectPtr<UArmorComponent> SpawnHitbox(FName Name, FVector HitboxRelativeLocation, FVector Rotation, FVector Direction, FVector Dimensions, EArmorShape Shape);
 
 	void RemoveHitboxByName(FName Name);
 	// ===== End hitbox manipulation =====
@@ -68,7 +68,7 @@ private:
 	///		1) the part of the target that was hit
 	///		2) our base position
 	/// Additionally, check if the armor is 'strong' enough to block the hit
-	bool GetIsHitBlocked(const UHitboxComponent* Hitbox, const FVector& HitLocation) const;
+	bool GetIsHitBlocked(const UArmorComponent* Hitbox, const FVector& HitLocation) const;
 
 	// It's got a little more state than I'd prefer, but ¯\_()_/¯
 	const FGameplayAbilitySpec* CurrentAbilitySpec;

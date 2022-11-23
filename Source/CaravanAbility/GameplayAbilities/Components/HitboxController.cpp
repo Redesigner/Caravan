@@ -12,12 +12,11 @@ void UHitboxController::BeginPlay()
 	Super::BeginPlay();
 }
 
-// Add default functionality here for any IHitboxController functions that are not pure virtual.
-TWeakObjectPtr<UHitboxComponent> UHitboxController::GetHitboxByName(FName Name)
+TWeakObjectPtr<UArmorComponent> UHitboxController::GetHitboxByName(FName Name)
 {
 	for (USceneComponent* SceneComponent : GetAttachChildren())
 	{
-		if (UHitboxComponent* SphereComponent = Cast<UHitboxComponent>(SceneComponent))
+		if (UArmorComponent* SphereComponent = Cast<UArmorComponent>(SceneComponent))
 		{
 			if (SphereComponent->GetFName() == Name)
 			{
@@ -28,33 +27,34 @@ TWeakObjectPtr<UHitboxComponent> UHitboxController::GetHitboxByName(FName Name)
 	return nullptr;
 }
 
-TWeakObjectPtr<UHitboxComponent> UHitboxController::SpawnHitbox(FName Name, FVector HitboxRelativeLocation, FVector Direction, float Radius)
+TWeakObjectPtr<UArmorComponent> UHitboxController::SpawnHitbox(FName Name, FVector HitboxRelativeLocation, FVector Rotation, FVector Direction, FVector Dimensions, EArmorShape Shape)
 {
-	UHitboxComponent* Hitbox = NewObject<UHitboxComponent>(this, Name);
-	Hitbox->SetSphereRadius(Radius, false);
+	UArmorComponent* Hitbox = NewObject<UArmorComponent>(this, Name);
+	Hitbox->Color = FColor::Red;
+	Hitbox->SpawnShape(Shape, Dimensions);
 	Hitbox->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
 	Hitbox->SetRelativeLocation(HitboxRelativeLocation, false, nullptr, ETeleportType::ResetPhysics);
-	Hitbox->Direction = Direction;
+	Hitbox->SetNormal(Direction);
+	Hitbox->ArmorShape = Shape;
 	Hitbox->OwningAbility = CurrentAbilitySpec;
+	Hitbox->SetRelativeRotation(FRotator::MakeFromEuler(Rotation));
 
 	Hitbox->SetVisibility(IsVisible(), true);
 	Hitbox->SetHiddenInGame(false);
 
 	Hitbox->SetCollisionProfileName(HitboxCollisionProfile.Name);
-	Hitbox->SetGenerateOverlapEvents(true);
-
-	Hitbox->OnComponentBeginOverlap.AddDynamic(this, &UHitboxController::AccumulateOverlaps);
-	
+	Hitbox->GetShapeComponent()->SetGenerateOverlapEvents(true);
 	Hitbox->RegisterComponent();
+	Hitbox->GetShapeComponent()->OnComponentBeginOverlap.AddDynamic(this, &UHitboxController::AccumulateOverlaps);
 
 	// Trigger any overlap events that happened when we spawned the hitbox
-	Hitbox->UpdateOverlaps();
+	Hitbox->GetShapeComponent()->UpdateOverlaps();
 	return Hitbox;
 }
 
 void UHitboxController::RemoveHitboxByName(FName Name)
 {
-	TWeakObjectPtr<UHitboxComponent> Hitbox = GetHitboxByName(Name);
+	TWeakObjectPtr<UArmorComponent> Hitbox = GetHitboxByName(Name);
 	if (Hitbox.IsValid())
 	{
 		Hitbox->DestroyComponent();
@@ -79,6 +79,7 @@ TWeakObjectPtr<UArmorComponent> UHitboxController::GetArmorByName(FName Name)
 TWeakObjectPtr<UArmorComponent> UHitboxController::SpawnArmor(FName Name, FVector ArmorRelativeLocation, FVector Rotation, FVector Normal, FVector Dimensions, EArmorShape Shape)
 {
 	UArmorComponent* Armor = NewObject<UArmorComponent>(this, Name);
+	Armor->Color = FColor::Blue;
 	Armor->SpawnShape(Shape, Dimensions);
 	Armor->OwningHitboxController = this;
 	Armor->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
@@ -86,7 +87,7 @@ TWeakObjectPtr<UArmorComponent> UHitboxController::SpawnArmor(FName Name, FVecto
 	Armor->SetRelativeLocation(ArmorRelativeLocation, false, nullptr, ETeleportType::ResetPhysics);
 	Armor->SetRelativeRotation(FRotator::MakeFromEuler(Rotation));
 
-	Armor->SetVisibility(IsVisible());
+	Armor->SetVisibility(IsVisible(), true);
 	Armor->SetHiddenInGame(false);
 
 	Armor->SetCollisionProfileName(ArmorCollisionProfile.Name);
@@ -106,6 +107,7 @@ void UHitboxController::RemoveArmorByName(FName Name)
 
 void UHitboxController::AccumulateOverlaps(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
+	UE_LOG(LogTemp, Display, TEXT("Overlapped hitbox"));
 	if (OtherActor == GetOwner())
 	{
 		return;
@@ -122,9 +124,9 @@ void UHitboxController::AccumulateOverlaps(UPrimitiveComponent* OverlappedCompon
 	FHitResult ModifiedHit = FHitResult(SweepResult);
 	ModifiedHit.Location = OverlappedComponent->GetComponentLocation();
 	
-	if (UHitboxComponent* HitboxComponent = Cast<UHitboxComponent>(OverlappedComponent))
+	if (UArmorComponent* HitboxComponent = Cast<UArmorComponent>(OverlappedComponent->GetAttachParent() ))
 	{
-		ModifiedHit.Normal =  HitboxComponent->GetComponentRotation().RotateVector(HitboxComponent->Direction);
+		ModifiedHit.Normal =  HitboxComponent->GetComponentRotation().RotateVector(HitboxComponent->GetNormal() );
 
 		if (GetIsHitBlocked(HitboxComponent, OtherActor->GetActorLocation() ))
 		{
@@ -148,7 +150,7 @@ void UHitboxController::SetCurrentGameplayAbilitySpec(const FGameplayAbilitySpec
 }
 
 
-bool UHitboxController::GetIsHitBlocked(const UHitboxComponent* Hitbox, const FVector& HitLocation) const
+bool UHitboxController::GetIsHitBlocked(const UArmorComponent* Hitbox, const FVector& HitLocation) const
 {
 	FHitResult ArmorTestResult;
 	FCollisionObjectQueryParams QueryParams;

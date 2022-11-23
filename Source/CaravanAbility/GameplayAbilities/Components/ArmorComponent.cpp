@@ -54,7 +54,7 @@ void UArmorComponent::SpawnShape(EArmorShape ShapeType, FVector Dimensions)
             break;
         }
     }
-    Shape->ShapeColor = FColor::Blue;
+    Shape->ShapeColor = Color;
     Shape->SetVisibility(IsVisible());
     Shape->SetHiddenInGame(false);
     Shape->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetIncludingScale);
@@ -77,7 +77,7 @@ void UArmorComponent::SetNormal(const FVector& InNormal)
     DirectionalArrow->SetHiddenInGame(false);
     DirectionalArrow->RegisterComponent();
     DirectionalArrow->SetRelativeRotation(Normal.ToOrientationRotator());
-    DirectionalArrow->SetArrowColor(Shape->ShapeColor);
+    DirectionalArrow->SetArrowColor(Color);
     DirectionalArrow->ArrowLength = 25.0f;
 #endif
 
@@ -90,7 +90,7 @@ FVector UArmorComponent::GetNormal() const
 
 void UArmorComponent::SetCollisionProfileName(FName CollisionProfileName)
 {
-    Shape->SetCollisionProfileName(CollisionProfileName);
+    Shape->SetCollisionProfileName(CollisionProfileName, false);
 }
 
 void UArmorComponent::SetDimensions(FVector Dimensions)
@@ -104,7 +104,7 @@ void UArmorComponent::SetDimensions(FVector Dimensions)
         }
         case Capsule:
         {
-            Cast<UCapsuleComponent>(Shape)->SetCapsuleSize(Dimensions.X, Dimensions.Y * 2.0f);
+            Cast<UCapsuleComponent>(Shape)->SetCapsuleSize(Dimensions.X, Dimensions.Y);
             break;
         }
         case Box:
@@ -113,4 +113,9 @@ void UArmorComponent::SetDimensions(FVector Dimensions)
             break;
         }
     }
+}
+
+UShapeComponent* UArmorComponent::GetShapeComponent()
+{
+    return Shape;
 }

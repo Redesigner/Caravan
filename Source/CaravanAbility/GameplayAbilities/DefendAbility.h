@@ -10,27 +10,6 @@
 
 #include "DefendAbility.generated.h"
 
-USTRUCT(BlueprintType)
-struct CARAVANABILITY_API FArmorInstance
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere)
-	TEnumAsByte<EArmorShape> Shape;
-
-	UPROPERTY(EditAnywhere, meta = (MakeEditWidget))
-	FVector Position;
-
-	UPROPERTY(EditAnywhere)
-	FVector Rotation;
-
-	UPROPERTY(EditAnywhere)
-	FVector Dimensions;
-
-	UPROPERTY(EditAnywhere)
-	FVector Normal;
-};
-
 /**
  * 
  */

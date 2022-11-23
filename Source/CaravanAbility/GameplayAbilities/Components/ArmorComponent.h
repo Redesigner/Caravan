@@ -16,10 +16,33 @@ enum EArmorShape
 	Box
 };
 
+USTRUCT(BlueprintType)
+struct CARAVANABILITY_API FArmorInstance
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	TEnumAsByte<EArmorShape> Shape;
+
+	UPROPERTY(EditAnywhere, meta = (MakeEditWidget))
+		FVector Position;
+
+	UPROPERTY(EditAnywhere)
+		FVector Rotation;
+
+	UPROPERTY(EditAnywhere)
+		FVector Dimensions;
+
+	UPROPERTY(EditAnywhere)
+		FVector Normal;
+};
+
 UCLASS()
 class CARAVANABILITY_API UArmorComponent : public USceneComponent
 {
 	GENERATED_BODY()
+
 	UArmorComponent(const FObjectInitializer& ObjectInitializer);
 
 public:
@@ -37,9 +60,16 @@ public:
 
 	void SetDimensions(FVector Dimensions);
 
+	class UShapeComponent* GetShapeComponent();
+
+
 	TEnumAsByte<EArmorShape> ArmorShape = EArmorShape::Sphere;
 
 	TWeakObjectPtr<class UHitboxController> OwningHitboxController;
+
+	const FGameplayAbilitySpec* OwningAbility;
+
+	FColor Color = FColor::Red;
 
 private:
 

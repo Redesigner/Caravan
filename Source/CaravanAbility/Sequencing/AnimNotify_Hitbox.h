@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
+#include "CaravanAbility/GameplayAbilities/Components/ArmorComponent.h"
+
 #include "AnimNotify_Hitbox.generated.h"
 
 /**
@@ -26,18 +28,9 @@ class CARAVANABILITY_API UAnimNotify_Hitbox : public UAnimNotifyState
 	FName HitboxName = TEXT("New hitbox");
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (MakeEditWidget, AllowPrivateAccess = true))
-	FVector HitboxRelativeLocation = FVector::Zero();
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true))
-	bool bHitboxHasDirection = true;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (MakeEditWidget, EditCondition = "bHitboxHasDirection", AllowPrivateAccess = true))
-	FVector HitboxDirection = FVector::Zero();
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true))
-	float HitboxRadius;
+	FArmorInstance ArmorInstance;
 
 public:
 	UPROPERTY()
-	class USphereComponent* VisualizerSphere;
+	class UShapeComponent* VisualizerShape;
 };

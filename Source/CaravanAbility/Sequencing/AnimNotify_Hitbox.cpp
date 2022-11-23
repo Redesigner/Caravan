@@ -6,9 +6,12 @@
 #include "CaravanAbility/Character/CharacterBase.h"
 
 #include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/BoxComponent.h"
+
 
 void UAnimNotify_Hitbox::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-                                     float TotalDuration, const FAnimNotifyEventReference& EventReference)
+	float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 	
@@ -20,17 +23,43 @@ void UAnimNotify_Hitbox::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequ
 	if (UHitboxController* HitboxController = Cast<UHitboxController>(HitboxControllerComponent))
 	{
 		// We need to somehow get the current ability from this context...
-		HitboxController->SpawnHitbox(HitboxName, HitboxRelativeLocation, HitboxDirection, HitboxRadius);
+		HitboxController->SpawnHitbox(HitboxName, ArmorInstance.Position, ArmorInstance.Rotation, ArmorInstance.Normal, ArmorInstance.Dimensions, ArmorInstance.Shape);
 	}
 	if (UWorld* World = MeshComp->GetWorld())
 	{
 		if (World->WorldType == EWorldType::EditorPreview)
 		{
-			VisualizerSphere = NewObject<USphereComponent>(World, HitboxName);
-			VisualizerSphere->SetWorldLocation(HitboxRelativeLocation);
-			VisualizerSphere->SetVisibility(true);
-			VisualizerSphere->SetSphereRadius(HitboxRadius);
-			VisualizerSphere->RegisterComponentWithWorld(World);
+			if (VisualizerShape)
+			{
+				VisualizerShape->DestroyComponent();
+			}
+			switch (ArmorInstance.Shape)
+			{
+				case Sphere:
+				{
+					USphereComponent* VisualizerSphere = NewObject<USphereComponent>(World, FName(TEXT("Sphere") + HitboxName.ToString()) );
+					VisualizerSphere->SetSphereRadius(ArmorInstance.Dimensions.X);
+					VisualizerShape = VisualizerSphere;
+					break;
+				}
+				case Capsule:
+				{
+					UCapsuleComponent* Capsule = NewObject<UCapsuleComponent>(World, FName(TEXT("Capsule") + HitboxName.ToString()) );
+					Capsule->SetCapsuleSize(ArmorInstance.Dimensions.X, ArmorInstance.Dimensions.Y);
+					VisualizerShape = Capsule;
+					break;
+				}
+				case Box:
+				{
+					UBoxComponent* Box = NewObject<UBoxComponent>(World, FName(TEXT("Box") + HitboxName.ToString()) );
+					Box->SetBoxExtent(ArmorInstance.Dimensions);
+					VisualizerShape = Box;
+				}
+			}
+			VisualizerShape->SetWorldLocation(ArmorInstance.Position);
+			VisualizerShape->SetWorldRotation(FRotator::MakeFromEuler(ArmorInstance.Rotation));
+			VisualizerShape->SetVisibility(true);
+			VisualizerShape->RegisterComponentWithWorld(World);
 		}
 	}
 }
@@ -49,9 +78,9 @@ void UAnimNotify_Hitbox::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequen
 	{
 		HitboxController->RemoveHitboxByName(HitboxName);
 	}
-	if (VisualizerSphere)
+	if (VisualizerShape)
 	{
-		VisualizerSphere->DestroyComponent();
+		VisualizerShape->DestroyComponent();
 	}
 }
 
@@ -59,8 +88,10 @@ void UAnimNotify_Hitbox::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
+	/*
 	if (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UAnimNotify_Hitbox, HitboxDirection))
 	{
 		HitboxDirection = HitboxDirection.GetSafeNormal();
 	}
+	*/
 }
