@@ -5,6 +5,8 @@
 
 #include "CaravanAbility/Character/CharacterBase.h"
 
+#include "Components/SphereComponent.h"
+
 void UAnimNotify_Hitbox::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                                      float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -19,6 +21,17 @@ void UAnimNotify_Hitbox::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequ
 	{
 		// We need to somehow get the current ability from this context...
 		HitboxController->SpawnHitbox(HitboxName, HitboxRelativeLocation, HitboxDirection, HitboxRadius);
+	}
+	if (UWorld* World = MeshComp->GetWorld())
+	{
+		if (World->WorldType == EWorldType::EditorPreview)
+		{
+			VisualizerSphere = NewObject<USphereComponent>(World, HitboxName);
+			VisualizerSphere->SetWorldLocation(HitboxRelativeLocation);
+			VisualizerSphere->SetVisibility(true);
+			VisualizerSphere->SetSphereRadius(HitboxRadius);
+			VisualizerSphere->RegisterComponentWithWorld(World);
+		}
 	}
 }
 
@@ -35,6 +48,10 @@ void UAnimNotify_Hitbox::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequen
 	if (UHitboxController* HitboxController = Cast<UHitboxController>(HitboxControllerComponent))
 	{
 		HitboxController->RemoveHitboxByName(HitboxName);
+	}
+	if (VisualizerSphere)
+	{
+		VisualizerSphere->DestroyComponent();
 	}
 }
 

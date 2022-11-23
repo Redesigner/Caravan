@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "HitboxComponent.h"
+#include "CaravanAbility\GameplayAbilities\Components\ArmorComponent.h"
+
 #include "HitboxController.generated.h"
 
 class UArmorComponent;
@@ -28,7 +30,7 @@ public:
 	// ===== Armor manipulation functions =====
 	TWeakObjectPtr<UArmorComponent> GetArmorByName(FName Name);
 
-	TWeakObjectPtr<UArmorComponent> SpawnArmor(FName Name, FVector ArmorRelativeLocation, float Radius);
+	TWeakObjectPtr<UArmorComponent> SpawnArmor(FName Name, FVector ArmorRelativeLocation, FVector Rotation, FVector Normal, FVector Dimensions, EArmorShape Shape);
 
 	void RemoveArmorByName(FName Name);
 	// ===== End armor manipulation =====

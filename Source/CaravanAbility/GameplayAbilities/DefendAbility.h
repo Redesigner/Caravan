@@ -6,6 +6,8 @@
 
 #include "Containers/Map.h" 
 #include "CaravanAbility/GameplayAbilities/CaravanGameplayAbility.h"
+#include "CaravanAbility/GameplayAbilities/Components/ArmorComponent.h"
+
 #include "DefendAbility.generated.h"
 
 USTRUCT(BlueprintType)
@@ -14,10 +16,19 @@ struct CARAVANABILITY_API FArmorInstance
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
+	TEnumAsByte<EArmorShape> Shape;
+
+	UPROPERTY(EditAnywhere, meta = (MakeEditWidget))
 	FVector Position;
 
 	UPROPERTY(EditAnywhere)
-	float Radius;
+	FVector Rotation;
+
+	UPROPERTY(EditAnywhere)
+	FVector Dimensions;
+
+	UPROPERTY(EditAnywhere)
+	FVector Normal;
 };
 
 /**

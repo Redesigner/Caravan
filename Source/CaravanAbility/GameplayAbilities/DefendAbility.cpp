@@ -32,7 +32,8 @@ void UDefendAbility::CommitExecute(const FGameplayAbilitySpecHandle Handle, cons
 		for (int i = 0; i < ArmorInstances.Num(); i++)
 		{
 			HitboxController = Cast<UHitboxController>(Component);
-			HitboxController->SpawnArmor(TEXT("Armor") + i, ArmorInstances[i].Position, ArmorInstances[i].Radius);
+			HitboxController->SpawnArmor(TEXT("Armor") + i, ArmorInstances[i].Position, ArmorInstances[i].Rotation,
+				ArmorInstances[i].Normal, ArmorInstances[i].Dimensions, ArmorInstances[i].Shape);
 		}
 	}
 

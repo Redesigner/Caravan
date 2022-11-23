@@ -36,4 +36,8 @@ class CARAVANABILITY_API UAnimNotify_Hitbox : public UAnimNotifyState
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true))
 	float HitboxRadius;
+
+public:
+	UPROPERTY()
+	class USphereComponent* VisualizerSphere;
 };

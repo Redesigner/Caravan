@@ -37,7 +37,7 @@ TWeakObjectPtr<UHitboxComponent> UHitboxController::SpawnHitbox(FName Name, FVec
 	Hitbox->Direction = Direction;
 	Hitbox->OwningAbility = CurrentAbilitySpec;
 
-	Hitbox->SetVisibility(IsVisible());
+	Hitbox->SetVisibility(IsVisible(), true);
 	Hitbox->SetHiddenInGame(false);
 
 	Hitbox->SetCollisionProfileName(HitboxCollisionProfile.Name);
@@ -76,13 +76,15 @@ TWeakObjectPtr<UArmorComponent> UHitboxController::GetArmorByName(FName Name)
 	return nullptr;
 }
 
-TWeakObjectPtr<UArmorComponent> UHitboxController::SpawnArmor(FName Name, FVector ArmorRelativeLocation, float Radius)
+TWeakObjectPtr<UArmorComponent> UHitboxController::SpawnArmor(FName Name, FVector ArmorRelativeLocation, FVector Rotation, FVector Normal, FVector Dimensions, EArmorShape Shape)
 {
 	UArmorComponent* Armor = NewObject<UArmorComponent>(this, Name);
+	Armor->SpawnShape(Shape, Dimensions);
 	Armor->OwningHitboxController = this;
-	Armor->SetSphereRadius(Radius, false);
 	Armor->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
+	Armor->SetNormal(Normal);
 	Armor->SetRelativeLocation(ArmorRelativeLocation, false, nullptr, ETeleportType::ResetPhysics);
+	Armor->SetRelativeRotation(FRotator::MakeFromEuler(Rotation));
 
 	Armor->SetVisibility(IsVisible());
 	Armor->SetHiddenInGame(false);
@@ -159,9 +161,10 @@ bool UHitboxController::GetIsHitBlocked(const UHitboxComponent* Hitbox, const FV
 	// DrawDebugDirectionalArrow(GetWorld(), StartLocation, EndLocation, 3.0f, FColor::Red, false, 2.0f);
 	if (ArmorTestResult.bBlockingHit)
 	{
-		// This *should* always be true, other components shouldn't be using this object channel
-		if (UArmorComponent* ArmorComponent = Cast<UArmorComponent>(ArmorTestResult.GetComponent()))
+		if (UArmorComponent* ArmorComponent = Cast<UArmorComponent>(ArmorTestResult.GetComponent()->GetAttachParent()))
 		{
+			// Convert our armor's built-in impact normal to world space
+			ArmorTestResult.Normal = ArmorComponent->GetComponentRotation().RotateVector(ArmorComponent->GetNormal());
 			ArmorComponent->OwningHitboxController->HitBlockedDelegate.ExecuteIfBound(ArmorTestResult);
 			// Hand this check off to the component itself
 			return ArmorComponent->CanBlockHit(Hitbox->OwningAbility);

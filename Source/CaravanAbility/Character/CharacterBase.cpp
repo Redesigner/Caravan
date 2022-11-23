@@ -43,7 +43,7 @@ ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer) :
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	HitboxController = CreateDefaultSubobject<UHitboxController>(TEXT("Hitbox Controller"));
-	HitboxController->SetupAttachment(RootComponent);
+	HitboxController->SetupAttachment(GetMesh());
 
 	AbilitySystem = CreateDefaultSubobject<UCharacterAbilitySystemComponent>(TEXT("CharacterAbility"));
 	AbilitySystem->SetHitboxController(HitboxController);
