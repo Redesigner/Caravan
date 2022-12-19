@@ -29,4 +29,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual FGameplayInteraction HandleInteraction(const FGameplayInteraction& Interaction) override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnPickup();
+
 };

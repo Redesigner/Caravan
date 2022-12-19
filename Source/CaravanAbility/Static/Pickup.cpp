@@ -29,6 +29,8 @@ FGameplayInteraction APickup::HandleInteraction(const FGameplayInteraction& Inte
 {
 	if (Interaction.InteractionType == EGameplayInteractionType::None)
 	{
+		// Destroy();
+		OnPickup();
 		return FGameplayInteraction(this, EGameplayInteractionType::Give);
 	}
 	return FGameplayInteraction::None();

@@ -122,7 +122,8 @@ void UHitboxController::AccumulateOverlaps(UPrimitiveComponent* OverlappedCompon
 		}
 	}
 	FHitResult ModifiedHit = FHitResult(SweepResult);
-	ModifiedHit.Location = OverlappedComponent->GetComponentLocation();
+	// ModifiedHit.Location = OverlappedComponent->GetComponentLocation();
+	ModifiedHit.Location = OtherComp->GetComponentLocation();
 	
 	if (UArmorComponent* HitboxComponent = Cast<UArmorComponent>(OverlappedComponent->GetAttachParent() ))
 	{
