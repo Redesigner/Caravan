@@ -60,7 +60,7 @@ void UMagicAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 
 void UMagicAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	UE_LOG(LogAbilitySystem, Display, TEXT("Held magic ability released/ended"));
+	// UE_LOG(LogAbilitySystem, Display, TEXT("Held magic ability released/ended"));
 	if (AppliedDurationEffect.IsValid())
 	{
 		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();

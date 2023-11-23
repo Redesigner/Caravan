@@ -55,9 +55,9 @@ void UPlayMontageTask::SharedInitSimulatedTask()
 	}
 	else
 	{
-		ABILITY_LOG(Warning, TEXT("UAbilityTask_ApplyRootMotionConstantForce called in Ability %s with null MovementComponent; Task Instance Name %s."),
+		/* ABILITY_LOG(Warning, TEXT("UAbilityTask_ApplyRootMotionConstantForce called in Ability %s with null MovementComponent; Task Instance Name %s."),
 			Ability ? *Ability->GetName() : TEXT("NULL"),
-			*InstanceName.ToString());
+			*InstanceName.ToString()); */
 	}
 }
 

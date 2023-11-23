@@ -80,7 +80,7 @@ void UDialogWidget::PrewrapText(FString& Text) const
 	int32 BreakLocation;
 	for (int i = 0; i < 5; i++)
 	{
-		BreakLocation = FontMeasure->FindCharacterIndexAtOffset(FText::FromString(Text), TextBox->Font, MaxWidth);
+		BreakLocation = FontMeasure->FindCharacterIndexAtOffset(FText::FromString(Text), TextBox->GetFont(), MaxWidth);
 		if (BreakLocation >= Text.Len())
 		{
 			return;

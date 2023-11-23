@@ -39,6 +39,9 @@ class CARAVANABILITY_API UMeleeAbility : public UCaravanGameplayAbility
 	UFUNCTION()
 	void EndAbilityManual();
 
+	UFUNCTION()
+	void AbilityInterrupted();
+
 	/// <summary>
 	/// UFUNCTION callback for applying damage, etc. on the authority
 	/// This is passed to the owning character's hitbox controller

@@ -59,7 +59,7 @@ void UMeleeAbility::ExecuteAttack(const FGameplayAbilitySpecHandle Handle, const
 		MontageTask->OnBlendOut.AddDynamic(this, &UMeleeAbility::EndAbilityManual);
 		// If the ability gets interrupted, manually call it as well.
 		// TODO: The abilities shouldn't be interrupted, but it *can* happen currently
-		MontageTask->OnInterrupted.AddDynamic(this, &UMeleeAbility::EndAbilityManual);
+		MontageTask->OnInterrupted.AddDynamic(this, &UMeleeAbility::AbilityInterrupted);
 
 		MontageTask->ReadyForActivation();
 
@@ -89,7 +89,17 @@ void UMeleeAbility::ExecuteAttack(const FGameplayAbilitySpecHandle Handle, const
 
 void UMeleeAbility::EndAbilityManual()
 {
-	UE_LOG(LogAbilitySystem, Display, TEXT("[%s] Ability ended Manually."), HasAuthority(&CurrentActivationInfo) ? TEXT("Authority") : TEXT("Proxy") );
+	// UE_LOG(LogAbilitySystem, Display, TEXT("[%s] Melee ability ended by animation blend out."), HasAuthority(&CurrentActivationInfo) ? TEXT("Authority") : TEXT("Proxy") );
+	if (UCharacterAbilitySystemComponent* CharacterASC = Cast<UCharacterAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo()))
+	{
+		CharacterASC->SetNextComboAbility(TEXT("NONE"));
+	}
+	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true, false);
+}
+
+void UMeleeAbility::AbilityInterrupted()
+{
+	// UE_LOG(LogAbilitySystem, Display, TEXT("[%s] Melee ability ended by interruption."), HasAuthority(&CurrentActivationInfo) ? TEXT("Authority") : TEXT("Proxy"));
 	if (UCharacterAbilitySystemComponent* CharacterASC = Cast<UCharacterAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo()))
 	{
 		CharacterASC->SetNextComboAbility(TEXT("NONE"));

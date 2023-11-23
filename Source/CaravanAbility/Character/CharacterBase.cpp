@@ -180,7 +180,7 @@ void ACharacterBase::GrantAbilities()
 
 	AbilitySystem->InitAbilityActorInfo(this, this);
 
-	UE_LOG(LogAbilitySystem, Display, TEXT("Granting default abilities to character"));
+	// UE_LOG(LogAbilitySystem, Display, TEXT("Granting default abilities to character"));
 	for (TSubclassOf<UCaravanGameplayAbility> Ability: DefaultAbilities)
 	{
 		if (UCaravanGameplayAbility* CaravanAbility = Cast<UCaravanGameplayAbility>(Ability.GetDefaultObject() ))
