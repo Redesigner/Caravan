@@ -28,7 +28,10 @@ public:
 
 	virtual void PhysicsRotation(float DeltaTime) override;
 
-
+	/**
+	 * @brief Disables character movment in a network-replication friendly way
+	 * @param Time How long, in seconds, to stun the character for
+	*/
 	void DisableMovementWithStun(float Time);
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Attributes")

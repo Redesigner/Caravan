@@ -19,7 +19,6 @@ void UDecalFadeComponent::OnVisibilityChanged()
 
 void UDecalFadeComponent::BeginPlay()
 {
-	bDesiredVisiblity = false;
 	SetVisibility(false);
 	CurrentFadeTime = bDesiredVisiblity ? 0.0f : FadeTime;
 	if (BaseMaterial)

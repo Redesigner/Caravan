@@ -79,7 +79,7 @@ void UCharacterBaseMovementComponent::DisableMovementWithStun(float Time)
 {
 	const FDateTime CurrentTime = FDateTime::Now();
 	int TimeMS = CurrentTime.GetMillisecond();
-	UE_LOG(LogTemp, Display, TEXT("Local Character Movement paused at %i"), TimeMS);
+	//UE_LOG(LogTemp, Display, TEXT("Local Character Movement paused at %i"), TimeMS);
 
 	bIsStunned = true;
 	GetWorld()->GetTimerManager().SetTimer(StunTimer, FTimerDelegate::CreateLambda(

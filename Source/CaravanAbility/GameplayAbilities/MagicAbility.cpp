@@ -76,7 +76,8 @@ void UMagicAbility::EndAbilityManual(float HeldTime)
 
 	if (ACharacterBase* Character = Cast<ACharacterBase>(GetOwningActorFromActorInfo()))
 	{
-		SpellLocation = Character->HideTargetingReticle();
+		SpellLocation = Character->GetTargetingReticleLocation();
+		Character->HideTargetingReticle();
 		UE_LOG(LogTargetingSystem, Display, TEXT("Reticle removed at '%s'"), *SpellLocation.ToString());
 		Character->UnpauseMovement();
 	}

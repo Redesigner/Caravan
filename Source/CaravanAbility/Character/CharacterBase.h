@@ -27,6 +27,10 @@
 
 class USphereComponent;
 class UCharacterAbilitySystemComponent;
+class USpringArmComponent;
+class UCameraComponent;
+
+
 UCLASS()
 class CARAVANABILITY_API ACharacterBase : public ACharacter,
 	public IAbilitySystemInterface, public IGameplayCueInterface,
@@ -34,16 +38,16 @@ class CARAVANABILITY_API ACharacterBase : public ACharacter,
 {
 	GENERATED_BODY()
 	
-	// ============================== MEMBER COMPONENTS =======================================
+	// ============================== MEMBER COMPONENTS ==========================================
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Targeting, meta = (AllowPrivateAccess = "true"), Replicated)
 	ATargetingReticleActor* TargetingReticle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
+	USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* FollowCamera;
+	UCameraComponent* FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Ability, meta = (AllowPrivateAccess = "true"))
 	UCharacterAbilitySystemComponent* AbilitySystem;
@@ -60,14 +64,10 @@ class CARAVANABILITY_API ACharacterBase : public ACharacter,
 
 
 public:
-	// Sets default values for this character's properties
 	ACharacterBase(const FObjectInitializer& ObjectInitializer);
 
-protected:
-	// ============================== Actor/Component overrides ==============================
 	virtual void BeginPlay() override;
 
-public:
 	virtual void Tick(float DeltaTime) override;
 
 	/// Bind inputs for movement and GameplayAbilities
@@ -80,7 +80,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	// ============================== End default overrides ==============================
+
 
 
 	UFUNCTION(BlueprintCallable)
@@ -94,15 +94,25 @@ public:
 	virtual const TArray<FString>& GetResponses() const override;
 
 	virtual FDialogTagHandle* GetRootTag() override;
-	// ============================== End interface ==============================
+	// ============================== End interface ==========================================
 
-
-	// Targeting reticle functions. Should these be moved somewhere else?
-	void SpawnTargetingReticle();
-
+	/**
+	 * @brief Start the targeting reticle's fade in
+	*/
 	void ShowTargetingReticle();
 
-	const FVector HideTargetingReticle();
+	/**
+	 * @brief Start the targeting reticle's fade out
+	*/
+	void HideTargetingReticle();
+
+	/**
+	 * @brief Get the current location of the targeting reticle
+	 * @return The location of the ground below the targeting reticle, or the character's location of the targeting reticle is not valid
+	*/
+	FVector GetTargetingReticleLocation() const;
+
+
 
 	// ============================== Movement functions and UFUNCTION bindings. ==============================
 	// UFUNCTION bindings are necessary for these abilities to be called by the default AI controller
@@ -117,14 +127,35 @@ public:
 	void LookRight(float Scale);
 	// ============================== End movement UFUNCTIONS ==============================
 
+	/**
+	 * @brief Disable the player's movement
+	*/
 	void PauseMovement();
+	/**
+	 * @brief Enable the player's movement
+	*/
 	void UnpauseMovement();
 
+	/**
+	 * @brief Interact with any actors in the character's interaction volume
+	*/
 	void Interact();
 
+	/**
+	 * @brief Pause the character's movement and call the blueprint function
+	*/
 	void DialogStart();
+
+	/**
+	 * @brief Unpause the character's movement and call the blueprint function
+	*/
 	void DialogEnd();
 
+	/**
+	 * @brief Have the character respond to an interaction
+	 * @param Interaction the interaction struct to be processed
+	 * @return Our response as an Interaction. Returns an FGameplayInteraction::None if we don't want to respond
+	*/
 	UFUNCTION(BlueprintCallable)
 	virtual FGameplayInteraction HandleInteraction(const FGameplayInteraction& Interaction) override;
 
@@ -132,9 +163,15 @@ public:
 	// You should apply/remove necessary GameplayEffects here
 	UFUNCTION(BlueprintImplementableEvent, meta = (BlueprintProtected))
 	void OnDialogStart();
+
 	UFUNCTION(BlueprintImplementableEvent, meta = (BlueprintProtected))
 	void OnDialogEnd();
 
+	/**
+	 * @brief Add a dialog response to our response map
+	 * @param Received 
+	 * @param DialogId 
+	*/
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	void AddDialogResponse(FName Received, FName DialogId);
 
@@ -156,6 +193,11 @@ public:
 	FDialogTagHandle RootTag;
 
 private:
+
+	/**
+	 * @brief Spawn a targeting reticle actor
+	*/
+	void SpawnTargetingReticle();
 	
 	UFUNCTION(Server, Reliable)
 	void PauseMovementServer();
@@ -164,6 +206,7 @@ private:
 	UFUNCTION(Server, Reliable)
 	void UnpauseMovementServer();
 	void UnpauseMovementLocal();
+
 
 	TMap<FName, FName> ResponseMap;
 

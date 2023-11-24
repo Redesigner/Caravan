@@ -28,17 +28,17 @@ void UTargetingReticleComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-FVector UTargetingReticleComponent::GetGroundLocation() const
+FVector UTargetingReticleComponent::GetGroundLocation(float MaxDistance) const
 {
-	const float MaxGroundDistance = 250.0f;
 	const FVector Origin = GetComponentLocation();
 	if (UWorld* World = GetWorld())
 	{
 		FHitResult GroundTest;
-		FCollisionObjectQueryParams FCOParams;
-		FCOParams.AddObjectTypesToQuery(ECC_WorldStatic);
-		FCOParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-		World->LineTraceSingleByObjectType(GroundTest, Origin, Origin + FVector::UpVector * -MaxGroundDistance, FCOParams);
+		const FVector EndLocation = Origin + FVector(0.0f, 0.0f, -MaxDistance);
+		FCollisionObjectQueryParams CollisionObjectQueryParams;
+		CollisionObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+		CollisionObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+		World->LineTraceSingleByObjectType(GroundTest, Origin, EndLocation, CollisionObjectQueryParams);
 
 		if (GroundTest.bBlockingHit)
 		{

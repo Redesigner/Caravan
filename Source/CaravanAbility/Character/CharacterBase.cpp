@@ -47,27 +47,26 @@ ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer) :
 
 	AbilitySystem = CreateDefaultSubobject<UCharacterAbilitySystemComponent>(TEXT("CharacterAbility"));
 	AbilitySystem->SetHitboxController(HitboxController);
-	// AbilitySystem->SetIsReplicated(true);
 
 	InteractionVolume = CreateDefaultSubobject<USphereComponent>(TEXT("Interaction Volume"));
 	InteractionVolume->SetupAttachment(RootComponent);
 
 	AttributeSet = CreateDefaultSubobject<UCharacterBaseAttributeSet>(TEXT("Character attribute set"));
 	AttributeSet->OnDeath.BindUObject(this, &ACharacterBase::OnDeath);
-
-	// UFunction* NewFunc = NewObject<UFunction>(GetClass(), TEXT("TestFunction"), RF_Public );
-	// NewFunc->FunctionFlags = NewFunc->FunctionFlags | EFunctionFlags::FUNC_Event | EFunctionFlags::FUNC_BlueprintEvent | EFunctionFlags::FUNC_BlueprintCallable;
-	// FNativeFunctionRegistrar::RegisterFunction(GetClass(), TEXT("TestFunc"), NewFunc->GetNativeFunc());
 }
 
-// Called when the game starts or when spawned
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
 	GrantAbilities();
 
-	if (!HasAuthority() && AbilitySystem)
+	if (!AbilitySystem)
+	{
+		return;
+	}
+
+	if (!HasAuthority())
 	{
 		AbilitySystem->InitAbilityActorInfo(this, this);
 	}
@@ -205,14 +204,16 @@ void ACharacterBase::SpawnTargetingReticle()
 	{
 		return;
 	}
-	if (TargetingReticleClass)
+	if (!TargetingReticleClass)
 	{
-		UE_LOG(LogTargetingSystem, Display, TEXT("%s %s spawned new Targeting Reticle Actor."),
-			GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"),
-			*GetName());
-		TargetingReticle = GetWorld()->SpawnActor<ATargetingReticleActor>(TargetingReticleClass, GetActorTransform());
-		TargetingReticle->SetOwningPawn(this);
+		UE_LOG(LogTargetingSystem, Warning, TEXT("Cannot spawn Targeting Reticle, TargetingReticleClass was not set."))
+		return;
 	}
+	UE_LOG(LogTargetingSystem, Display, TEXT("%s %s spawned new Targeting Reticle Actor."),
+		GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"),
+		*GetName());
+	TargetingReticle = GetWorld()->SpawnActor<ATargetingReticleActor>(TargetingReticleClass, GetActorTransform());
+	TargetingReticle->SetOwningPawn(this);
 }
 
 
@@ -222,18 +223,30 @@ void ACharacterBase::ShowTargetingReticle()
 	{
 		TargetingReticle->FadeIn();
 	}
+	UE_LOG(LogTargetingSystem, Warning, TEXT("Cannot show the targeting reticle, it was nullptr."));
 }
 
 
-const FVector ACharacterBase::HideTargetingReticle()
+void ACharacterBase::HideTargetingReticle()
 {
-	if (TargetingReticle)
+	if (!TargetingReticle)
 	{
-		TargetingReticle->FadeOut();
-		return TargetingReticle->GetGroundLocation();
+		UE_LOG(LogTargetingSystem, Warning, TEXT("%s Unable to find a targeting reticle, it was nullptr"),
+			GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"));
+		return;
 	}
-	UE_LOG(LogTargetingSystem, Warning, TEXT("%s Unable to find a targeting reticle"), GetNetMode() == ENetMode::NM_Client ? TEXT("[client]") : TEXT("[server]"));
-	return FVector(0.0f, 0.0f, 100.0f);
+	TargetingReticle->FadeOut();
+	return;
+}
+
+FVector ACharacterBase::GetTargetingReticleLocation() const
+{
+	if (!TargetingReticle)
+	{
+		UE_LOG(LogTargetingSystem, Warning, TEXT("%s Unable to find a targeting reticle, it was nullptr"));
+		return GetActorLocation();
+	}
+	return TargetingReticle->GetGroundLocation();
 }
 
 
@@ -308,7 +321,9 @@ void ACharacterBase::DialogEnd()
 
 FGameplayInteraction ACharacterBase::HandleInteraction(const FGameplayInteraction& Interaction)
 {
-	if (Interaction.InteractionType == EGameplayInteractionType::ShowDialog)
+	switch (Interaction.InteractionType)
+	{
+	case EGameplayInteractionType::ShowDialog:
 	{
 		if (DialogHandler.IsValid())
 		{
@@ -319,23 +334,23 @@ FGameplayInteraction ACharacterBase::HandleInteraction(const FGameplayInteractio
 			// If we want to respond to a text option, we will do that later
 			return FGameplayInteraction::None();
 		}
-	}
-	else if (Interaction.InteractionType == EGameplayInteractionType::Respond)
+	}break;
+	case EGameplayInteractionType::Respond:
 	{
-		if (FName* Reply = ResponseMap.Find(Interaction.Payload) )
+		if (FName* Reply = ResponseMap.Find(Interaction.Payload))
 		{
 			FGameplayInteraction ResponseInteraction = FGameplayInteraction(this, *Reply, EGameplayInteractionType::ShowDialog);
 			return ResponseInteraction;
 		}
-	}
-	else if (Interaction.InteractionType == EGameplayInteractionType::Give)
+	}break;
+	case EGameplayInteractionType::Give:
 	{
 		if (InventoryContainer.IsValid())
 		{
 			InventoryContainer->GiveItem(FInventoryEntry::Empty());
 		}
+	}break;
 	}
-
 	// We handled two default cases: ShowDialog and Respond are special for the character.
 	// The rest can be customized in blueprint
 	return OnHandleInteraction(Interaction);
@@ -368,7 +383,7 @@ void ACharacterBase::AddDialogResponse(FName Received, FName DialogId)
 
 void ACharacterBase::PauseMovementLocal()
 {
-	UCharacterMovementComponent* CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
+	UCharacterMovementComponent* CharacterMovementComponent = GetCharacterMovement();
 	TSharedPtr<FRootMotionSource_ConstantForce> RootMotionSource = MakeShared<FRootMotionSource_ConstantForce>();
 	RootMotionSource->Duration = -1.0f;
 	RootMotionSource->AccumulateMode = ERootMotionAccumulateMode::Override;
@@ -380,7 +395,7 @@ void ACharacterBase::PauseMovementLocal()
 
 void ACharacterBase::UnpauseMovementLocal()
 {
-	UCharacterMovementComponent* CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
+	UCharacterMovementComponent* CharacterMovementComponent = GetCharacterMovement();
 	CharacterMovementComponent->RemoveRootMotionSource(TEXT("HoldStillRootMotion"));
 }
 

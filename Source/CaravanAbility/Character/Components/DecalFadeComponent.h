@@ -7,12 +7,13 @@
 #include "DecalFadeComponent.generated.h"
 
 /**
- * 
- */
+ * @brief Custom wrapper around UDecalComponent to add fade/in out functionality
+*/
 UCLASS()
 class CARAVANABILITY_API UDecalFadeComponent : public UDecalComponent
 {
 	GENERATED_BODY()
+
 
 	UDecalFadeComponent();
 
@@ -23,23 +24,22 @@ class CARAVANABILITY_API UDecalFadeComponent : public UDecalComponent
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-	
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal|Material")
-	UMaterialInterface* BaseMaterial;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal|Fade")
-	float FadeTime = 1.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Decal|Fade")
-	float CurrentFadeTime = 0.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal|Fade")
-	bool bDesiredVisiblity = false;
 
 private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal|Material", meta = (AllowPrivateAccess = true))
+	UMaterialInterface* BaseMaterial;
+
 	UPROPERTY(Transient);
 	UMaterialInstanceDynamic* InternalMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal|Fade", meta = (AllowPrivateAccess = true))
+	float FadeTime = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Decal|Fade", meta = (AllowPrivateAccess = true))
+	float CurrentFadeTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal|Fade", meta = (AllowPrivateAccess = true))
+	bool bDesiredVisiblity = false;
 
 	bool bIsFading = false;
 };
