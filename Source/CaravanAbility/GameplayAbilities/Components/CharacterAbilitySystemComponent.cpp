@@ -89,7 +89,7 @@ void UCharacterAbilitySystemComponent::SetComboStateFromName(FName Name)
 			return;
 		}
 	}
-	UE_LOG(LogAbilityQueue, Warning, TEXT("ComboState set to '%s', but could not find an FComboState with that name."), *Name.ToString());
+	// UE_LOG(LogAbilityQueue, Warning, TEXT("ComboState set to '%s', but could not find an FComboState with that name."), *Name.ToString());
 }
 
 
@@ -169,10 +169,11 @@ void UCharacterAbilitySystemComponent::NotifyAbilityEnded(FGameplayAbilitySpecHa
 }
 
 
-void UCharacterAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
+void UCharacterAbilitySystemComponent::AbilityLocalInputPressed(int32 InputId)
 {
+	UE_LOG(LogAbilitySystemComponent, Display, TEXT("Input %i pressed."), InputId)
 	FGameplayTag AbilityTag;
-	if (CurrentComboState.GetGameplayTagFromInput(InputID, AbilityTag) )
+	if (CurrentComboState.GetGameplayTagFromInput(InputId, AbilityTag) )
 	{
 		// If we couldn't activate the ability, add it to the queue
 		if (!TryActivateAbilitiesByTag(AbilityTag.GetSingleTagContainer()) )
@@ -180,11 +181,10 @@ void UCharacterAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
 			QueueAbility(AbilityTag);
 			return;
 		}
+		return;
 	}
-	else
-	{
-		Super::AbilityLocalInputPressed(InputID);
-	}
+	UE_LOG(LogAbilitySystemComponent, Display, TEXT("No combo state for input %i, using default bindings."), InputId)
+	Super::AbilityLocalInputPressed(InputId);
 }
 
 void UCharacterAbilitySystemComponent::SetHitboxController(UHitboxController* Controller)

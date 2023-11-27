@@ -42,12 +42,6 @@ void UMagicAbility::CommitExecute(const FGameplayAbilitySpecHandle Handle, const
 }
 
 
-void UMagicAbility::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
-{
-	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
-}
-
-
 void UMagicAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
@@ -63,10 +57,32 @@ void UMagicAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	// UE_LOG(LogAbilitySystem, Display, TEXT("Held magic ability released/ended"));
 	if (AppliedDurationEffect.IsValid())
 	{
-		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-		ASC->RemoveActiveGameplayEffect(AppliedDurationEffect);
+		if (UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo())
+		{
+			AbilitySystemComponent->RemoveActiveGameplayEffect(AppliedDurationEffect);
+		}
 	}
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void UMagicAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+{
+	if (UWorld* World = GetWorld())
+	{
+		ActivationTime = World->GetTimeSeconds();
+	}
+
+	if (DurationEffect)
+	{
+		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DurationEffect);
+		AppliedDurationEffect = ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
+	}
+
+	if (ACharacterBase* Character = Cast<ACharacterBase>(GetOwningActorFromActorInfo()))
+	{
+		Character->ShowTargetingReticle();
+		Character->PauseMovement();
+	}
 }
 
 

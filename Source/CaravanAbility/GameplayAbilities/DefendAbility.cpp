@@ -9,18 +9,13 @@
 #include "CaravanAbility\GameplayAbilities\Components\HitboxController.h"
 #include "CaravanAbility\Character\CharacterBase.h"
 
-void UDefendAbility::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
-{
-	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
-}
-
 void UDefendAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
 }
 
-void UDefendAbility::CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+void UDefendAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (BlockingEffect)
 	{
@@ -53,6 +48,7 @@ void UDefendAbility::CommitExecute(const FGameplayAbilitySpecHandle Handle, cons
 		}
 	}
 }
+
 
 void UDefendAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {

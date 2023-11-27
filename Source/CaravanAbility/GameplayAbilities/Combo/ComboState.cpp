@@ -20,7 +20,7 @@ bool FComboState::GetGameplayTagFromInput(int32 InputID, FGameplayTag& OutGamepl
         UE_LOG(LogAbilityCombos, Display, TEXT("Player pressed input '%i', and queued next ability with tag '%s'"), InputID, *OutGameplayTag.ToString())
         return true;
     }
-    UE_LOG(LogAbilityCombos, Display, TEXT("Player pressed input '%i', but there was no ability associated with that input for the current combo state."), InputID)
+    // UE_LOG(LogAbilityCombos, Display, TEXT("Player pressed input '%i', but there was no ability associated with that input for combo state '%s'."), InputID, *Name.ToString())
     return false;
 }
 
