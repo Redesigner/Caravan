@@ -62,7 +62,7 @@ void UCharacterAbilitySystemComponent::RemoveGameplayCueLocal(const FGameplayTag
 void UCharacterAbilitySystemComponent::QueueAbility(const FGameplayTag& AbilityTag)
 {
 	UE_LOG(LogAbilityQueue, Display, TEXT("[%s] Ability queued: '%s'"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"), *AbilityTag.ToString());
-	QueuedAbilities.Enqueue(TPair<float, FGameplayTag>(GetWorld()->TimeSeconds, AbilityTag));
+	QueuedAbilities.Push(TPair<float, FGameplayTag>(GetWorld()->TimeSeconds, AbilityTag));
 }
 
 void UCharacterAbilitySystemComponent::ClearAbilityQueue()
@@ -104,8 +104,9 @@ bool UCharacterAbilitySystemComponent::GetNextValidQueuedAbility(FGameplayTag& O
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 
 	TPair<float, FGameplayTag> QueuedAbility;
-	while (QueuedAbilities.Dequeue(QueuedAbility))
+	while (!QueuedAbilities.IsEmpty())
 	{
+		QueuedAbility = QueuedAbilities.Pop();
 		const float AbilityQueuedTime = QueuedAbility.Key;
 		if (CurrentTime - AbilityQueuedTime <= AbilityLifetime)
 		{
@@ -119,6 +120,11 @@ bool UCharacterAbilitySystemComponent::GetNextValidQueuedAbility(FGameplayTag& O
 	}
 	UE_LOG(LogAbilityQueue, Display, TEXT("[%s] No valid abilities found in queue"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy") );
 	return false;
+}
+
+TArray<TPair<float, FGameplayTag>> UCharacterAbilitySystemComponent::GetQueuedAbilities() const
+{
+	return QueuedAbilities;
 }
 
 

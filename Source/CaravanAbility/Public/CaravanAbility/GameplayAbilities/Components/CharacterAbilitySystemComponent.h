@@ -16,6 +16,8 @@ UCLASS()
 class CARAVANABILITY_API UCharacterAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
+
+	friend class FGameplayDebuggerCategory_CaravanAbility;
 	
 public:
 	UCharacterAbilitySystemComponent();
@@ -78,6 +80,9 @@ private:
 	/// <param name="OutAbilityTag">Reference to tag to be set if found</param>
 	bool GetNextValidQueuedAbility(FGameplayTag& OutAbilityTag);
 
+
+	TArray <TPair<float, FGameplayTag>> GetQueuedAbilities() const;
+
 	/// The last time we checked the queue. This value should not be changed
 	float QueueLastUpdateTime;
 
@@ -85,7 +90,7 @@ private:
 	/// Pairs of:
 	/// Time the tag was added to the queue
 	/// Tag itself
-	TQueue<TPair<float, FGameplayTag>> QueuedAbilities;
+	TArray<TPair<float, FGameplayTag>> QueuedAbilities;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Combo, meta = (AllowPrivateAccess = true))
 	TArray<FComboState> ComboStates;

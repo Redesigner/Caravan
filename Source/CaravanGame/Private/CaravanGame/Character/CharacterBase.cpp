@@ -22,7 +22,6 @@
 #include "Net/UnrealNetwork.h"
 
 
-// Sets default values
 ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer) :
 	ACharacter(ObjectInitializer.SetDefaultSubobjectClass(ACharacter::CharacterMovementComponentName, UCharacterBaseMovementComponent::StaticClass()))
 {
@@ -73,7 +72,6 @@ void ACharacterBase::BeginPlay()
 	}
 }
 
-// Called every frame
 void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

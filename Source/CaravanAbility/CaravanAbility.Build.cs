@@ -16,7 +16,7 @@ public class CaravanAbility : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[] {
 			"Json", "JsonUtilities", "GameplayAbilities", "GameplayTags",
-			"GameplayTasks", "Slate", "SlateCore"
+			"GameplayTasks", "Slate", "SlateCore", "GameplayDebugger"
 		});
 	}
 }
