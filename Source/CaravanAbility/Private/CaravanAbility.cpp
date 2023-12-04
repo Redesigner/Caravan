@@ -4,8 +4,10 @@
 
 #include "Modules/ModuleManager.h"
 #include "GameplayDebugger.h"
+#include "GameFramework/HUD.h"
 
 #include "CaravanAbility/System/GameplayDebuggerCategory_CaravanAbility.h"
+#include "CaravanAbility/GameplayAbilities/Components/CharacterAbilitySystemComponent.h"
 
 DEFINE_LOG_CATEGORY(LogCaravanAbility);
 DEFINE_LOG_CATEGORY(LogAbilityQueue);
@@ -26,6 +28,11 @@ void FCaravanAbilityModule::StartupModule()
 	);
 	GameplayDebuggerModule.NotifyCategoriesChanged();
 #endif
+
+	/*if (!IsRunningDedicatedServer())
+	{
+		AHUD::OnShowDebugInfo.AddStatic(&UCharacterAbilitySystemComponent::OnShowDebugInfo);
+	}*/
 }
 
 void FCaravanAbilityModule::ShutdownModule()

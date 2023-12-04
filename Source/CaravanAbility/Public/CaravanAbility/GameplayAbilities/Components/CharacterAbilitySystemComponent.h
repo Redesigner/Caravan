@@ -61,6 +61,7 @@ public:
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnComboStateChanged, const FComboState&)
 	FOnComboStateChanged OnComboStateChanged;
 
+	virtual void DisplayDebug(class UCanvas* Canvas, const class FDebugDisplayInfo& DebugDisplay, float& YL, float& YPos) override;
 
 // PROPERTIES
 	bool bAbilitiesInitialized = false;
@@ -106,4 +107,5 @@ private:
 
 	TWeakObjectPtr<UHitboxController> HitboxController;
 
+	void DrawLine(FString Line, class UCanvas* Canvas, float& YL, float& YPos, FColor LineColor);
 };

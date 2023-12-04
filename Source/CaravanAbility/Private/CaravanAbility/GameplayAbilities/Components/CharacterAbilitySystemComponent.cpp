@@ -6,6 +6,7 @@
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayCueManager.h"
+#include "GameFramework/Character.h"
 
 #include "CaravanAbility/GameplayAbilities/Abilities/CaravanGameplayAbility.h"
 #include "CaravanAbility/GameplayAbilities/Components/HitboxController.h"
@@ -13,6 +14,10 @@
 
 #include "Net/UnrealNetwork.h"
 
+// Debug HUD includes
+#include "GameFramework/HUD.h"
+#include "DisplayDebugHelpers.h"
+#include "Engine/Canvas.h" 
 
 UCharacterAbilitySystemComponent::UCharacterAbilitySystemComponent()
 {
@@ -62,7 +67,7 @@ void UCharacterAbilitySystemComponent::RemoveGameplayCueLocal(const FGameplayTag
 void UCharacterAbilitySystemComponent::QueueAbility(const FGameplayTag& AbilityTag)
 {
 	UE_LOG(LogAbilityQueue, Display, TEXT("[%s] Ability queued: '%s'"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"), *AbilityTag.ToString());
-	QueuedAbilities.Push(TPair<float, FGameplayTag>(GetWorld()->TimeSeconds, AbilityTag));
+	QueuedAbilities.Push(TPair<float, FGameplayTag>(GetWorld()->TimeSeconds + AbilityLifetime, AbilityTag));
 }
 
 void UCharacterAbilitySystemComponent::ClearAbilityQueue()
@@ -108,7 +113,7 @@ bool UCharacterAbilitySystemComponent::GetNextValidQueuedAbility(FGameplayTag& O
 	{
 		QueuedAbility = QueuedAbilities.Pop();
 		const float AbilityQueuedTime = QueuedAbility.Key;
-		if (CurrentTime - AbilityQueuedTime <= AbilityLifetime)
+		if (AbilityQueuedTime - CurrentTime > 0.0f)
 		{
 			OutAbilityTag = QueuedAbility.Value;
 			return true;
@@ -139,6 +144,20 @@ void UCharacterAbilitySystemComponent::NotifyAbilityEnded(FGameplayAbilitySpecHa
 {
 	Super::NotifyAbilityEnded(Handle, Ability, bWasCancelled);
 
+	FGameplayAbilitySpec* EndedAbilitySpec = FindAbilitySpecFromHandle(Handle);
+	UE_LOG(LogAbilityQueue, Display, TEXT("[%s] Ability '%s' ended"), GetOwnerRole() == ENetRole::ROLE_Authority ? TEXT("Authority") : TEXT("Proxy"), *EndedAbilitySpec->GetDebugString());
+
+	// Currently, the queue should only exist with local inputs, so there's no point in checking it if we don't have local control
+	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
+	{
+		if (!Character->IsLocallyControlled())
+		{
+			return;
+		}
+	}
+
+	// Cancel the ability on the server, so the RPC for activation doesn't fail
+	CancelAbilityHandle(Handle);
 	FGameplayTag NextAbility;
 	if (GetNextValidQueuedAbility(NextAbility))
 	{
@@ -177,7 +196,7 @@ void UCharacterAbilitySystemComponent::NotifyAbilityEnded(FGameplayAbilitySpecHa
 
 void UCharacterAbilitySystemComponent::AbilityLocalInputPressed(int32 InputId)
 {
-	UE_LOG(LogAbilitySystemComponent, Display, TEXT("Input %i pressed."), InputId)
+	// UE_LOG(LogAbilitySystemComponent, Display, TEXT("Input %i pressed."), InputId)
 	FGameplayTag AbilityTag;
 	if (CurrentComboState.GetGameplayTagFromInput(InputId, AbilityTag) )
 	{
@@ -189,11 +208,79 @@ void UCharacterAbilitySystemComponent::AbilityLocalInputPressed(int32 InputId)
 		}
 		return;
 	}
-	UE_LOG(LogAbilitySystemComponent, Display, TEXT("No combo state for input %i, using default bindings."), InputId)
+	// UE_LOG(LogAbilitySystemComponent, Display, TEXT("No combo state for input %i, using default bindings."), InputId)
 	Super::AbilityLocalInputPressed(InputId);
 }
 
 void UCharacterAbilitySystemComponent::SetHitboxController(UHitboxController* Controller)
 {
 	HitboxController = Controller;
+}
+
+
+void UCharacterAbilitySystemComponent::DisplayDebug(UCanvas* Canvas, const FDebugDisplayInfo& DebugDisplay, float& YL, float& YPos)
+{
+	Super::DisplayDebug(Canvas, DebugDisplay, YL, YPos);
+
+	if (!Canvas)
+	{
+		return;
+	}
+	const float XPos = 4.0f;
+	FFontRenderInfo RenderInfo = FFontRenderInfo();
+	RenderInfo.bEnableShadow = true;
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	const UFont* Font = GEngine->GetTinyFont();
+
+	DrawLine(TEXT("Currently Active Abilities:"), Canvas, YL, YPos, FColor::Cyan);
+
+	TArray<FGameplayAbilitySpec> DebugActivatableAbilities = GetActivatableAbilities();
+	
+	for (FGameplayAbilitySpec& DebugGameplayAbilitySpec : DebugActivatableAbilities)
+	{
+		if (DebugGameplayAbilitySpec.IsActive())
+		{
+			DrawLine(FString::Printf(TEXT("%s"), *DebugGameplayAbilitySpec.GetDebugString()), Canvas, YL, YPos, FColor::White);
+		}
+	}
+	YPos += YL;
+	DrawLine(TEXT("Caravan Ability Queue:"), Canvas, YL, YPos, FColor::Blue);
+
+	for (TPair<float, FGameplayTag> QueuedAbility : QueuedAbilities)
+	{
+		const float TimeRemaining = QueuedAbility.Key - CurrentTime;
+		if (TimeRemaining > 0.0f)
+		{
+			const FString& QueuedString = QueuedAbility.Value.ToString();
+			float NewXPos = 0.0f;
+			float NewYPos = 0.0f;
+			Canvas->TextSize(Font, QueuedString, NewXPos, NewYPos);
+			NewXPos += XPos;
+			Canvas->SetDrawColor(FColor::Yellow);
+			Canvas->DrawText(Font, QueuedString, XPos, YL + YPos, 1.0f, 1.0f, RenderInfo);
+			Canvas->SetDrawColor(FColor::White);
+			YPos += Canvas->DrawText(GEngine->GetTinyFont(),
+				FString::Printf(TEXT(" %f"), TimeRemaining),
+				NewXPos, YL + YPos, 1.0f, 1.0f, RenderInfo);
+		}
+		else
+		{
+			const FString& QueuedString = QueuedAbility.Value.ToString();
+			Canvas->SetDrawColor(FColor::Red);
+			// YL doesn't seem to be increasing here...
+			YPos += Canvas->DrawText(GEngine->GetTinyFont(),
+				FString::Printf(TEXT("%s : %f"), *QueuedAbility.Value.ToString(), TimeRemaining),
+				XPos, YL + YPos, 1.0f, 1.0f, RenderInfo);
+		}
+	}
+}
+
+void UCharacterAbilitySystemComponent::DrawLine(FString Line, UCanvas* Canvas, float& YL, float& YPos, FColor LineColor)
+{
+	FFontRenderInfo FontRenderInfo = FFontRenderInfo();
+	FontRenderInfo.bEnableShadow = true;
+
+	Canvas->SetDrawColor(LineColor);
+	YL = Canvas->DrawText(GEngine->GetTinyFont(), Line, 4.0f, YL + YPos, 1.0f, 1.0f, FontRenderInfo);
+	YPos += YL;
 }

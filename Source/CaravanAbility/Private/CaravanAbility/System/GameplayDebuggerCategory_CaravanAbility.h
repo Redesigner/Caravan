@@ -23,6 +23,8 @@ public:
 protected:
 	struct FRepData
 	{
+		FString AbilityComponentOwnerDisplayName;
+
 		TArray<TPair<float, FGameplayTag>> UserQueuedAbilities;
 
 		void Serialize(FArchive& Ar);

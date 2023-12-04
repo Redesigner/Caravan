@@ -24,20 +24,32 @@ void FGameplayDebuggerCategory_CaravanAbility::CollectData(APlayerController *Ow
 
 	if (!AbilityComponent)
 	{
+		DataPack.AbilityComponentOwnerDisplayName = TEXT("Invalid CaravanAbilityComponent");
 		return;
 	}
 
+	DataPack.AbilityComponentOwnerDisplayName = DebugActor->GetName();
 	DataPack.UserQueuedAbilities = AbilityComponent->GetQueuedAbilities();
 }
 
 
 void FGameplayDebuggerCategory_CaravanAbility::DrawData(APlayerController* OwnerPC, FGameplayDebuggerCanvasContext& CanvasContext)
 {
-	CanvasContext.Printf(TEXT("Ability Queue:"));
+	const float CurrentTime = OwnerPC->GetWorld()->GetTimeSeconds();
+
+	CanvasContext.Printf(TEXT("{blue}[%s] {white}Ability Queue:"), *DataPack.AbilityComponentOwnerDisplayName);
 
 	for (TPair<float, FGameplayTag> QueuedAbility : DataPack.UserQueuedAbilities)
 	{
-		CanvasContext.Printf(TEXT("\t{yellow}%s {grey}: %f "), *QueuedAbility.Value.ToString(), QueuedAbility.Key);
+		const float TimeRemaining = QueuedAbility.Key - CurrentTime;
+		if (TimeRemaining > 0.0f)
+		{
+			CanvasContext.Printf(TEXT("\t{yellow}%s {grey}: %f "), *QueuedAbility.Value.ToString(), TimeRemaining);
+		}
+		else
+		{
+			CanvasContext.Printf(TEXT("\t{red}%s : %f "), *QueuedAbility.Value.ToString(), TimeRemaining);
+		}
 	}
 }
 
