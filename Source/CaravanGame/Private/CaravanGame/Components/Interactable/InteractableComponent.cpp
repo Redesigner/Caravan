@@ -11,3 +11,7 @@ UInteractableComponent::UInteractableComponent()
 UInteractableComponent::~UInteractableComponent()
 {
 }
+
+void UInteractableComponent::Interact(ACharacterBase* Instigator)
+{
+}

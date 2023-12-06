@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h" 
+#include "InteractableComponent.h" 
 #include "DialogComponent.generated.h"
 
-UCLASS()
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CARAVANGAME_API UDialogComponent : public UInteractableComponent
 {
     GENERATED_BODY()
@@ -16,4 +16,8 @@ public:
     ~UDialogComponent();
 
     virtual void Interact(class ACharacterBase* Instigator) override;
+
+private:
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Dialog, meta = (AllowPrivateAccess = true))
+    UDataTable* DialogTable;
 };

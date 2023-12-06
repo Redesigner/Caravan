@@ -15,5 +15,5 @@ public:
     UInteractableComponent();
     ~UInteractableComponent();
 
-    virtual void Interact(class ACharacterBase* Instigator) = 0;
+    virtual void Interact(class ACharacterBase* Instigator);
 };

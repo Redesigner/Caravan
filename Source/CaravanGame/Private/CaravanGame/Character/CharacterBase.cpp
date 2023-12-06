@@ -12,6 +12,7 @@
 #include "CaravanGame/Character/Components/DecalFadeComponent.h" 
 #include "CaravanGame/Dialog/DialogHandler.h"
 #include "CaravanGame/Inventory/InventoryContainer.h"
+#include "CaravanGame/Components/Interactable/InteractableComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -297,12 +298,10 @@ void ACharacterBase::Interact()
 	InteractionVolume->GetOverlappingActors(OverlappingActors);
 	for (AActor* Target : OverlappingActors)
 	{
-		/* if (Target->Implements<UInteractableInterface>())
+		if (UInteractableComponent* InteractableComponent = Target->GetComponentByClass<UInteractableComponent>())
 		{
-			IInteractableInterface* Interactable = Cast<IInteractableInterface>(Target);
-			const FGameplayInteraction& InteractionResult = Interactable->HandleInteraction(FGameplayInteraction::None());
-			HandleInteraction(InteractionResult);
-		} */
+			InteractableComponent->Interact(this);
+		}
 	}
 }
 

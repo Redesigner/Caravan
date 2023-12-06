@@ -4,10 +4,14 @@
 #include "CaravanGame/Components/Interactable/PickupComponent.h"
 
 
-UPickupComponent::UPickupeComponent()
+UPickupComponent::UPickupComponent()
 {
 }
 
 UPickupComponent::~UPickupComponent()
+{
+}
+
+void UPickupComponent::Interact(ACharacterBase* Instigator)
 {
 }

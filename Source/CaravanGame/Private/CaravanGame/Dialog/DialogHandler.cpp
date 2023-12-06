@@ -3,8 +3,10 @@
 
 #include "CaravanGame/Dialog/DialogHandler.h"
 
+#include "CaravanGame.h"
 #include "CaravanGame/Character/CharacterBase.h"
 #include "CaravanGame/Player/CaravanPlayerController.h"
+#include "CaravanGame/Components/Interactable/DialogComponent.h"
 
 
 UDialogHandler::UDialogHandler(const FObjectInitializer& ObjectInitializer)
@@ -24,8 +26,7 @@ void UDialogHandler::QueueDialog(FName DialogId)
 		}
 		else
 		{
-			// TODO: Separate log category
-			UE_LOG(LogTemp, Warning, TEXT("Attempting to have the player load dialog '%s' from table '%s' failed -- there is no row with that name."),
+			UE_LOG(LogCaravanGame, Warning, TEXT("Attempting to have the player load dialog '%s' from table '%s' failed -- there is no row with that name."),
 				*DialogTable->GetName(), *DialogId.ToString())
 		}
 	}
@@ -35,9 +36,9 @@ void UDialogHandler::QueueDialog(FName DialogId)
 void UDialogHandler::Respond(FString& Response)
 {
 	UE_LOG(LogTemp, Display, TEXT("Player clicked dialog option :'%s'"), *Response)
-	if (Target.GetObject() && CharacterOwner.IsValid())
+	if (Target.IsValid() && CharacterOwner.IsValid())
 	{
-		UE_LOG(LogTemp, Display, TEXT("Sending Response to '%s'"), *Target.GetObject()->GetName())
+		UE_LOG(LogTemp, Display, TEXT("Sending Response to '%s'"), *Target->GetName())
 	}
 }
 
@@ -129,9 +130,9 @@ void UDialogHandler::SetOwningCharacter(ACharacterBase* Character)
 	CharacterOwner = Character;
 }
 
-void UDialogHandler::SetTarget(TScriptInterface<IInteractableInterface> Character)
+void UDialogHandler::SetTarget(UDialogComponent* TargetComponent)
 {
-	Target = Character;
+	Target = TargetComponent;
 }
 
 bool UDialogHandler::IsActive() const

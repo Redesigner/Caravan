@@ -29,11 +29,6 @@ class CARAVANGAME_API ACaravanPlayerController : public APlayerController
 
 	virtual void SetupInputComponent() override;
 
-	UPROPERTY()
-	UDialogWidget* DialogDisplayWidget;
-
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
-	UInventoryUserWidget* InventoryWidget;
 
 public:
 	void ShowCursor();
@@ -46,14 +41,22 @@ public:
 private:
 	TWeakObjectPtr<ACharacterBase> PlayerCharacter;
 
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UDialogWidget> DialogWidgetClass;
+
+	UPROPERTY()
+	UDialogWidget* DialogDisplayWidget;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
+	class UDialogHandler* DialogHandler;
+
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UInventoryUserWidget> InventoryWidgetClass;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
-	class UDialogHandler* DialogHandler;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
+	UInventoryUserWidget* InventoryWidget;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Interface, meta = (AllowPrivateAccess = "true"))
 	class UInventoryContainer* InventoryContainer;

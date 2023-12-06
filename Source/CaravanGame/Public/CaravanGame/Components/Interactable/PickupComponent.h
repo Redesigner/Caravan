@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h" 
+#include "InteractableComponent.h" 
 #include "PickupComponent.generated.h"
 
 UCLASS()
-class CARAVANGAME_API UPickupComponent : public UActorComponent
+class CARAVANGAME_API UPickupComponent : public UInteractableComponent
 {
     GENERATED_BODY()
 
@@ -15,5 +15,5 @@ public:
     UPickupComponent();
     ~UPickupComponent();
 
-    virtual void Interact(class ACharacterBase* Instigator) = 0;
+    virtual void Interact(class ACharacterBase* Instigator) override;
 };
