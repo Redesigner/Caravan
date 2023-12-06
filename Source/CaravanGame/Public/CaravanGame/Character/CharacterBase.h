@@ -11,10 +11,8 @@
 
 #include "Components/PrimitiveComponent.h"
 
-#include "CaravanGame/Dialog/GameplayInteraction.h"
 #include "CaravanGame/Dialog/DialogResponseInterface.h"
 #include "CaravanGame/Dialog/Tags/DialogTagHandle.h"
-#include "CaravanGame/Static/InteractableInterface.h"
 
 #include "CaravanAbility/GameplayAbilities/Abilities/CaravanGameplayAbility.h"
 #include "CaravanAbility/GameplayAbilities/Components/HitboxController.h"
@@ -31,7 +29,7 @@ class UCameraComponent;
 UCLASS()
 class CARAVANGAME_API ACharacterBase : public ACharacter,
 	public IAbilitySystemInterface, public IGameplayCueInterface,
-	public IDialogResponseInterface, public IInteractableInterface
+	public IDialogResponseInterface
 {
 	GENERATED_BODY()
 	
@@ -148,14 +146,6 @@ public:
 	*/
 	void DialogEnd();
 
-	/**
-	 * @brief Have the character respond to an interaction
-	 * @param Interaction the interaction struct to be processed
-	 * @return Our response as an Interaction. Returns an FGameplayInteraction::None if we don't want to respond
-	*/
-	UFUNCTION(BlueprintCallable)
-	virtual FGameplayInteraction HandleInteraction(const FGameplayInteraction& Interaction) override;
-
 	// Called after the internal dialog handling is done.
 	// You should apply/remove necessary GameplayEffects here
 	UFUNCTION(BlueprintImplementableEvent, meta = (BlueprintProtected))
@@ -171,9 +161,6 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	void AddDialogResponse(FName Received, FName DialogId);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	FGameplayInteraction OnHandleInteraction(FGameplayInteraction Interaction);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDeath(const FGameplayEffectSpec CauseOfDeath);

@@ -38,11 +38,6 @@ void UDialogHandler::Respond(FString& Response)
 	if (Target.GetObject() && CharacterOwner.IsValid())
 	{
 		UE_LOG(LogTemp, Display, TEXT("Sending Response to '%s'"), *Target.GetObject()->GetName())
-		const FGameplayInteraction& ResponseResult = Target->HandleInteraction(FGameplayInteraction(CharacterOwner.Get(), FName(Response), EGameplayInteractionType::Respond));
-		if (ResponseResult.InteractionType == EGameplayInteractionType::ShowDialog)
-		{
-			QueueDialog(ResponseResult.Payload);
-		}
 	}
 }
 

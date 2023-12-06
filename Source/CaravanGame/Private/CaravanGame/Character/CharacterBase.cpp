@@ -297,12 +297,12 @@ void ACharacterBase::Interact()
 	InteractionVolume->GetOverlappingActors(OverlappingActors);
 	for (AActor* Target : OverlappingActors)
 	{
-		if (Target->Implements<UInteractableInterface>())
+		/* if (Target->Implements<UInteractableInterface>())
 		{
 			IInteractableInterface* Interactable = Cast<IInteractableInterface>(Target);
 			const FGameplayInteraction& InteractionResult = Interactable->HandleInteraction(FGameplayInteraction::None());
 			HandleInteraction(InteractionResult);
-		}
+		} */
 	}
 }
 
@@ -318,7 +318,7 @@ void ACharacterBase::DialogEnd()
 	OnDialogEnd();
 }
 
-FGameplayInteraction ACharacterBase::HandleInteraction(const FGameplayInteraction& Interaction)
+/* FGameplayInteraction ACharacterBase::HandleInteraction(const FGameplayInteraction& Interaction)
 {
 	switch (Interaction.InteractionType)
 	{
@@ -358,7 +358,7 @@ FGameplayInteraction ACharacterBase::HandleInteraction(const FGameplayInteractio
 FGameplayInteraction ACharacterBase::OnHandleInteraction_Implementation(FGameplayInteraction Interaction)
 {
 	return FGameplayInteraction::None();
-}
+} */
 
 
 void ACharacterBase::PauseMovement()
